@@ -943,6 +943,74 @@ version is not allowed:
   - length: { values: 1 }
   - match: { values.0: [20] }
 
+"Test IN with empty list parameter returns no rows":
+  - requires:
+      test_runner_features: [ capabilities ]
+      capabilities: [ in_list_query_params ]
+      reason: "list-valued parameters in IN clause"
+  - do:
+      esql.query:
+        body:
+          query: 'from test | where color IN (?colors) | stats c = count()'
+          params: [{"colors": []}]
+
+  - length: { columns: 1 }
+  - length: { values: 1 }
+  - match: { values.0: [0] }
+
+"Test NOT IN with empty list parameter returns all rows":
+  - requires:
+      test_runner_features: [ capabilities ]
+      capabilities: [ in_list_query_params ]
+      reason: "list-valued parameters in IN clause"
+  - do:
+      esql.query:
+        body:
+          query: 'from test | where color NOT IN (?colors) | stats c = count()'
+          params: [{"colors": []}]
+
+  - length: { columns: 1 }
+  - length: { values: 1 }
+  - match: { values.0: [40] }
+
+"Test IS NULL OR IN fallback - null param returns all rows":
+  - requires:
+      test_runner_features: [ capabilities ]
+      capabilities:
+        - method: POST
+          path: /_query
+          parameters: [ capabilities ]
+          capabilities: [ in_list_query_params ]
+      reason: "list-valued parameters in IN clause"
+  - do:
+      esql.query:
+        body:
+          query: 'from test | where ?colors IS NULL OR color IN (?colors) | stats c = count()'
+          params: [{"colors": null}]
+
+  - length: { columns: 1 }
+  - length: { values: 1 }
+  - match: { values.0: [40] }
+
+"Test IS NULL OR IN fallback - non-empty list filters rows":
+  - requires:
+      test_runner_features: [ capabilities ]
+      capabilities:
+        - method: POST
+          path: /_query
+          parameters: [ capabilities ]
+          capabilities: [ in_list_query_params ]
+      reason: "list-valued parameters in IN clause"
+  - do:
+      esql.query:
+        body:
+          query: 'from test | where ?colors IS NULL OR color IN (?colors) | stats c = count()'
+          params: [{"colors": ["blue"]}]
+
+  - length: { columns: 1 }
+  - length: { values: 1 }
+  - match: { values.0: [10] }
+
 ---
 "Test IN with list-valued integer parameter":
   - requires:

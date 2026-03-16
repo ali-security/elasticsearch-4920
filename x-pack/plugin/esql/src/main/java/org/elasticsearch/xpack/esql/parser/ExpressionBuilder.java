@@ -838,7 +838,7 @@ public abstract class ExpressionBuilder extends IdentifierBuilder {
                 throw new ParsingException(lit.source(), "A list parameter cannot be used as the left side of IN");
             } else if (expressions.isEmpty() == false && expr instanceof Literal lit && lit.value() instanceof List<?> list) {
                 if (list.isEmpty()) {
-                    throw new ParsingException(lit.source(), "Empty list parameter is not allowed in IN");
+                    return new Literal(source(ctx), ctx.NOT() != null, DataType.BOOLEAN);
                 }
                 for (Object item : list) {
                     if (item == null) {

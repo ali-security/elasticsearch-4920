@@ -23,6 +23,8 @@ import org.elasticsearch.xpack.esql.expression.function.scalar.string.regex.RLik
 import org.elasticsearch.xpack.esql.expression.function.scalar.string.regex.WildcardLike;
 import org.elasticsearch.xpack.esql.expression.function.scalar.string.regex.WildcardLikeList;
 import org.elasticsearch.xpack.esql.expression.predicate.logical.Not;
+import org.elasticsearch.xpack.esql.expression.predicate.logical.Or;
+import org.elasticsearch.xpack.esql.expression.predicate.nulls.IsNull;
 import org.elasticsearch.xpack.esql.expression.predicate.operator.comparison.Equals;
 import org.elasticsearch.xpack.esql.expression.predicate.operator.comparison.EsqlBinaryComparison;
 import org.elasticsearch.xpack.esql.expression.predicate.operator.comparison.In;
@@ -994,11 +996,17 @@ public class ParamsParserTests extends AbstractStatementParserTests {
     }
 
     public void testInWithEmptyListParam() {
-        expectError(
-            "from test | where x IN (?vals)",
-            List.of(paramAsConstant("vals", List.of())),
-            "Empty list parameter is not allowed in IN"
-        );
+        LogicalPlan plan = query("from test | where x IN (?vals)", new QueryParams(List.of(paramAsConstant("vals", List.of()))));
+        Filter filter = as(plan, Filter.class);
+        Literal lit = as(filter.condition(), Literal.class);
+        assertEquals(false, lit.value());
+    }
+
+    public void testNotInWithEmptyListParam() {
+        LogicalPlan plan = query("from test | where x NOT IN (?vals)", new QueryParams(List.of(paramAsConstant("vals", List.of()))));
+        Filter filter = as(plan, Filter.class);
+        Literal lit = as(filter.condition(), Literal.class);
+        assertEquals(true, lit.value());
     }
 
     public void testInWithListParamAsLhsThrows() {
@@ -1019,6 +1027,33 @@ public class ParamsParserTests extends AbstractStatementParserTests {
             List.of(paramAsConstant("vals", listWithNull)),
             "List parameter for IN must not contain null values"
         );
+    }
+
+    public void testIsNullOrInFallbackNullParam() {
+        // ?vals IS NULL OR x IN (?vals) with null param: IS NULL folds to true, IN gets null literal
+        LogicalPlan plan = query(
+            "from test | where ?vals IS NULL OR x IN (?vals)",
+            new QueryParams(List.of(paramAsConstant("vals", null)))
+        );
+        Filter filter = as(plan, Filter.class);
+        Or or = as(filter.condition(), Or.class);
+        as(or.left(), IsNull.class); // ?vals IS NULL → folds to true
+        // right side: single null literal → Equals(x, null), SQL null semantics, but OR short-circuits
+        Equals eq = as(or.right(), Equals.class);
+        assertNull(as(eq.right(), Literal.class).value());
+    }
+
+    public void testIsNullOrInFallbackNonEmptyList() {
+        // ?vals IS NULL OR x IN (?vals) with non-empty list: IS NULL is false, IN expands normally
+        LogicalPlan plan = query(
+            "from test | where ?vals IS NULL OR x IN (?vals)",
+            new QueryParams(List.of(paramAsConstant("vals", List.of("a", "b"))))
+        );
+        Filter filter = as(plan, Filter.class);
+        Or or = as(filter.condition(), Or.class);
+        as(or.left(), IsNull.class);
+        In in = as(or.right(), In.class);
+        assertEquals(2, in.list().size());
     }
 
     public void testInWithPositionalListParam() {
