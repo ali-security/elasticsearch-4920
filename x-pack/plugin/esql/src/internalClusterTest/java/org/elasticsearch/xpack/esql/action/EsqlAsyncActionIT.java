@@ -50,7 +50,12 @@ public class EsqlAsyncActionIT extends EsqlActionIT {
 
     @Override
     public EsqlQueryResponse run(EsqlQueryRequest original) {
-        EsqlQueryRequest request = EsqlQueryRequest.asyncEsqlQueryRequest(original.query());
+        EsqlQueryRequest request;
+        if (original.parsedStatement() != null) {
+            request = EsqlQueryRequest.asyncEsqlQueryRequestWithPlan(original.parsedStatement());
+        } else {
+            request = EsqlQueryRequest.asyncEsqlQueryRequest(original.query());
+        }
         request.pragmas(original.pragmas());
         request.profile(original.profile());
         request.acceptedPragmaRisks(true);

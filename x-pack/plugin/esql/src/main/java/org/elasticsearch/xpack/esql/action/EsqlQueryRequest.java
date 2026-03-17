@@ -94,6 +94,17 @@ public class EsqlQueryRequest extends org.elasticsearch.xpack.core.esql.action.E
         return request;
     }
 
+    /**
+     * Creates an asynchronous request with a pre-built statement, bypassing ES|QL string parsing.
+     * The query string is only used for logging/display since the plan is already built.
+     */
+    public static EsqlQueryRequest asyncEsqlQueryRequestWithPlan(EsqlStatement statement) {
+        String queryText = statement.plan().sourceText();
+        EsqlQueryRequest request = new EsqlQueryRequest(true, queryText.isEmpty() ? "[pre-built plan]" : queryText);
+        request.parsedStatement = statement;
+        return request;
+    }
+
     private EsqlQueryRequest(boolean async, String query) {
         this.async = async;
         this.query = query;
