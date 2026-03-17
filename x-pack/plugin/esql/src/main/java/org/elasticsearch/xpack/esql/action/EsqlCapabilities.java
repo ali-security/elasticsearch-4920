@@ -2315,9 +2315,10 @@ public class EsqlCapabilities {
         FIX_PASSTHROUGH_FIELD_CAPS_OBJECT_PARENT,
 
         /**
-         * Support for list-valued query parameters in the IN clause. A parameter like
-         * {@code ?statuses = ["open", "pending"]} used as {@code WHERE status IN (?statuses)}
-         * is expanded into individual scalar literals during parsing.
+         * List-valued expressions in the IN clause are expanded into individual scalar literals during parsing.
+         * This applies both to query parameters ({@code ?statuses = ["open", "pending"]} used as
+         * {@code WHERE status IN (?statuses)}) and to explicit array literals
+         * ({@code WHERE status IN (["open", "pending"])} is equivalent to {@code WHERE status IN ("open", "pending")}).
          */
         IN_LIST_QUERY_PARAMS,
 

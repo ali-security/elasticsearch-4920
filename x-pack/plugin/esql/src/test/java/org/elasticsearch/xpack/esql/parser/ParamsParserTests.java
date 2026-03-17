@@ -1013,7 +1013,7 @@ public class ParamsParserTests extends AbstractStatementParserTests {
         expectError(
             "from test | where ?vals IN (\"a\", \"b\")",
             List.of(paramAsConstant("vals", List.of("x", "y"))),
-            "A list parameter cannot be used as the left side of IN"
+            "A list value cannot be used as the left side of IN"
         );
     }
 
