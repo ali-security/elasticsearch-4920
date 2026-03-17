@@ -25,6 +25,7 @@ import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.hnsw.RandomVectorScorer;
 import org.apache.lucene.util.hnsw.RandomVectorScorerSupplier;
 import org.apache.lucene.util.quantization.LegacyQuantizedByteVectorValues;
+import org.apache.lucene.util.quantization.QuantizedByteVectorValues;
 import org.apache.lucene.util.quantization.ScalarQuantizer;
 import org.elasticsearch.simdvec.VectorScorerFactory;
 
@@ -135,18 +136,13 @@ class BenchmarkUtils {
         return new Lucene99ScalarQuantizedVectorScorer(null).getRandomVectorScorer(sim, values, queryVec);
     }
 
-    static RandomVectorScorerSupplier lucene104ScoreSupplier(
-        org.apache.lucene.codecs.lucene104.QuantizedByteVectorValues values,
-        VectorSimilarityFunction sim
-    ) throws IOException {
+    static RandomVectorScorerSupplier lucene104ScoreSupplier(QuantizedByteVectorValues values, VectorSimilarityFunction sim)
+        throws IOException {
         return new Lucene104ScalarQuantizedVectorScorer(null).getRandomVectorScorerSupplier(sim, values);
     }
 
-    static RandomVectorScorer lucene104Scorer(
-        org.apache.lucene.codecs.lucene104.QuantizedByteVectorValues values,
-        VectorSimilarityFunction sim,
-        float[] queryVec
-    ) throws IOException {
+    static RandomVectorScorer lucene104Scorer(QuantizedByteVectorValues values, VectorSimilarityFunction sim, float[] queryVec)
+        throws IOException {
         return new Lucene104ScalarQuantizedVectorScorer(null).getRandomVectorScorer(sim, values, queryVec);
     }
 
