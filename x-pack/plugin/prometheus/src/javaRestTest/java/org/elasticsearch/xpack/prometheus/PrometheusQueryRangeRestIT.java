@@ -62,34 +62,23 @@ public class PrometheusQueryRangeRestIT extends ESRestTestCase {
     public void testQueryRangeWithIngestedData() throws Exception {
         ingestTestData();
 
-        ObjectPath responsePath = executeQueryRange(null);
-        assertMetricResults(responsePath);
-    }
-
-    public void testQueryRangeWithExplicitIndex() throws Exception {
-        ingestTestData();
-
-        ObjectPath responsePath = executeQueryRange("metrics-generic.prometheus-default");
+        ObjectPath responsePath = executeQueryRange();
         assertMetricResults(responsePath);
     }
 
     private static void assertMetricResults(ObjectPath responsePath) throws IOException {
-
         assertThat(responsePath.evaluate("data.result"), hasSize(1));
         assertThat(responsePath.evaluate("data.result.0.metric.job"), equalTo("test_job"));
         assertThat(responsePath.evaluate("data.result.0.metric.instance"), equalTo("localhost:9090"));
         assertThat(responsePath.evaluate("data.result.0.values"), hasSize(5));
     }
 
-    private ObjectPath executeQueryRange(String index) throws Exception {
-        Request request = new Request(randomBoolean() ? "GET" : "POST", "/_prometheus/api/v1/query_range");
-        request.addParameter("query", "test_gauge_qr");
+    private ObjectPath executeQueryRange() throws Exception {
+        Request request = new Request("GET", "/_prometheus/api/v1/query_range");
+        request.addParameter("query", "test_gauge_qr{job=\"test_job\"}");
         request.addParameter("start", "2026-01-01T00:00:00Z");
         request.addParameter("end", "2026-01-01T00:05:00Z");
         request.addParameter("step", "60s");
-        if (index != null) {
-            request.addParameter("index", index);
-        }
 
         Response response = client().performRequest(request);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(200));

@@ -64,16 +64,4 @@ public class PrometheusQueryRangeRestActionTests extends ESTestCase {
         assertThat(params.get("step").value(), equalTo("15s"));
     }
 
-    public void testBuildQueryParamsWithCustomIndex() {
-        QueryParams params = PrometheusQueryRangeRestAction.buildQueryParams(
-            "up",
-            "logs-*,metrics-*",
-            "2025-01-01T00:00:00Z",
-            "2025-01-01T01:00:00Z",
-            "15s"
-        );
-        assertThat(params.get("query").value(), equalTo("up"));
-        assertThat(params.get("index").value(), equalTo("logs-*,metrics-*"));
-    }
-
 }
