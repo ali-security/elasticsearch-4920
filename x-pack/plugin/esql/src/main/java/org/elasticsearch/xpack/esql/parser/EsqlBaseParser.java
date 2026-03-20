@@ -25,106 +25,106 @@ public class EsqlBaseParser extends ParserConfig {
   protected static final PredictionContextCache _sharedContextCache =
     new PredictionContextCache();
   public static final int
-    LINE_COMMENT=1, MULTILINE_COMMENT=2, WS=3, CHANGE_POINT=4, ENRICH=5, DEV_EXPLAIN=6,
-    COMPLETION=7, DISSECT=8, EVAL=9, GROK=10, LIMIT=11, RERANK=12, ROW=13,
-    SAMPLE=14, SORT=15, STATS=16, WHERE=17, URI_PARTS=18, METRICS_INFO=19,
-    REGISTERED_DOMAIN=20, TS_INFO=21, FROM=22, TS=23, DEV_EXTERNAL=24, FORK=25,
-    FUSE=26, INLINE=27, INLINESTATS=28, JOIN_LOOKUP=29, DEV_JOIN_FULL=30,
-    DEV_JOIN_LEFT=31, DEV_JOIN_RIGHT=32, DEV_LOOKUP=33, MMR=34, MV_EXPAND=35,
-    DROP=36, KEEP=37, DEV_INSIST=38, PROMQL=39, RENAME=40, SET=41, SHOW=42,
-    UNKNOWN_CMD=43, CHANGE_POINT_LINE_COMMENT=44, CHANGE_POINT_MULTILINE_COMMENT=45,
-    CHANGE_POINT_WS=46, ENRICH_POLICY_NAME=47, ENRICH_LINE_COMMENT=48, ENRICH_MULTILINE_COMMENT=49,
-    ENRICH_WS=50, ENRICH_FIELD_LINE_COMMENT=51, ENRICH_FIELD_MULTILINE_COMMENT=52,
-    ENRICH_FIELD_WS=53, EXPLAIN_WS=54, EXPLAIN_LINE_COMMENT=55, EXPLAIN_MULTILINE_COMMENT=56,
-    PIPE=57, QUOTED_STRING=58, INTEGER_LITERAL=59, DECIMAL_LITERAL=60, AND=61,
-    ASC=62, ASSIGN=63, BY=64, CAST_OP=65, COLON=66, SEMICOLON=67, COMMA=68,
-    DESC=69, DOT=70, FALSE=71, FIRST=72, IN=73, IS=74, LAST=75, LIKE=76, NOT=77,
-    NULL=78, NULLS=79, ON=80, OR=81, PARAM=82, RLIKE=83, TRUE=84, WITH=85,
-    EQ=86, CIEQ=87, NEQ=88, LT=89, LTE=90, GT=91, GTE=92, PLUS=93, MINUS=94,
-    ASTERISK=95, SLASH=96, PERCENT=97, LEFT_BRACES=98, RIGHT_BRACES=99, DOUBLE_PARAMS=100,
-    NAMED_OR_POSITIONAL_PARAM=101, NAMED_OR_POSITIONAL_DOUBLE_PARAMS=102,
-    OPENING_BRACKET=103, CLOSING_BRACKET=104, LP=105, RP=106, UNQUOTED_IDENTIFIER=107,
-    QUOTED_IDENTIFIER=108, EXPR_LINE_COMMENT=109, EXPR_MULTILINE_COMMENT=110,
-    EXPR_WS=111, METADATA=112, UNQUOTED_SOURCE=113, FROM_LINE_COMMENT=114,
-    FROM_MULTILINE_COMMENT=115, FROM_WS=116, FORK_WS=117, FORK_LINE_COMMENT=118,
-    FORK_MULTILINE_COMMENT=119, GROUP=120, SCORE=121, KEY=122, FUSE_LINE_COMMENT=123,
-    FUSE_MULTILINE_COMMENT=124, FUSE_WS=125, INLINE_STATS=126, INLINE_LINE_COMMENT=127,
-    INLINE_MULTILINE_COMMENT=128, INLINE_WS=129, JOIN=130, USING=131, JOIN_LINE_COMMENT=132,
-    JOIN_MULTILINE_COMMENT=133, JOIN_WS=134, LOOKUP_LINE_COMMENT=135, LOOKUP_MULTILINE_COMMENT=136,
-    LOOKUP_WS=137, LOOKUP_FIELD_LINE_COMMENT=138, LOOKUP_FIELD_MULTILINE_COMMENT=139,
-    LOOKUP_FIELD_WS=140, MMR_LIMIT=141, MMR_LINE_COMMENT=142, MMR_MULTILINE_COMMENT=143,
-    MMR_WS=144, MVEXPAND_LINE_COMMENT=145, MVEXPAND_MULTILINE_COMMENT=146,
-    MVEXPAND_WS=147, ID_PATTERN=148, PROJECT_LINE_COMMENT=149, PROJECT_MULTILINE_COMMENT=150,
-    PROJECT_WS=151, PROMQL_PARAMS_LINE_COMMENT=152, PROMQL_PARAMS_MULTILINE_COMMENT=153,
-    PROMQL_PARAMS_WS=154, PROMQL_QUERY_COMMENT=155, PROMQL_SINGLE_QUOTED_STRING=156,
-    PROMQL_OTHER_QUERY_CONTENT=157, AS=158, RENAME_LINE_COMMENT=159, RENAME_MULTILINE_COMMENT=160,
-    RENAME_WS=161, SET_LINE_COMMENT=162, SET_MULTILINE_COMMENT=163, SET_WS=164,
+    LINE_COMMENT=1, MULTILINE_COMMENT=2, WS=3, CHANGE_POINT=4, ENRICH=5, DEV_EXPLAIN=6, 
+    COMPLETION=7, DISSECT=8, EVAL=9, GROK=10, LIMIT=11, RERANK=12, ROW=13, 
+    SAMPLE=14, SORT=15, STATS=16, WHERE=17, URI_PARTS=18, METRICS_INFO=19, 
+    REGISTERED_DOMAIN=20, TS_INFO=21, FROM=22, TS=23, DEV_EXTERNAL=24, FORK=25, 
+    FUSE=26, INLINE=27, INLINESTATS=28, JOIN_LOOKUP=29, DEV_JOIN_FULL=30, 
+    DEV_JOIN_LEFT=31, DEV_JOIN_RIGHT=32, DEV_LOOKUP=33, MMR=34, MV_EXPAND=35, 
+    DROP=36, KEEP=37, DEV_INSIST=38, PROMQL=39, RENAME=40, SET=41, SHOW=42, 
+    UNKNOWN_CMD=43, CHANGE_POINT_LINE_COMMENT=44, CHANGE_POINT_MULTILINE_COMMENT=45, 
+    CHANGE_POINT_WS=46, ENRICH_POLICY_NAME=47, ENRICH_LINE_COMMENT=48, ENRICH_MULTILINE_COMMENT=49, 
+    ENRICH_WS=50, ENRICH_FIELD_LINE_COMMENT=51, ENRICH_FIELD_MULTILINE_COMMENT=52, 
+    ENRICH_FIELD_WS=53, EXPLAIN_WS=54, EXPLAIN_LINE_COMMENT=55, EXPLAIN_MULTILINE_COMMENT=56, 
+    PIPE=57, QUOTED_STRING=58, INTEGER_LITERAL=59, DECIMAL_LITERAL=60, AND=61, 
+    ASC=62, ASSIGN=63, BY=64, CAST_OP=65, COLON=66, SEMICOLON=67, COMMA=68, 
+    DESC=69, DOT=70, FALSE=71, FIRST=72, IN=73, IS=74, LAST=75, LIKE=76, NOT=77, 
+    NULL=78, NULLS=79, ON=80, OR=81, PARAM=82, RLIKE=83, TRUE=84, WITH=85, 
+    EQ=86, CIEQ=87, NEQ=88, LT=89, LTE=90, GT=91, GTE=92, PLUS=93, MINUS=94, 
+    ASTERISK=95, SLASH=96, PERCENT=97, LEFT_BRACES=98, RIGHT_BRACES=99, DOUBLE_PARAMS=100, 
+    NAMED_OR_POSITIONAL_PARAM=101, NAMED_OR_POSITIONAL_DOUBLE_PARAMS=102, 
+    OPENING_BRACKET=103, CLOSING_BRACKET=104, LP=105, RP=106, UNQUOTED_IDENTIFIER=107, 
+    QUOTED_IDENTIFIER=108, EXPR_LINE_COMMENT=109, EXPR_MULTILINE_COMMENT=110, 
+    EXPR_WS=111, METADATA=112, UNQUOTED_SOURCE=113, FROM_LINE_COMMENT=114, 
+    FROM_MULTILINE_COMMENT=115, FROM_WS=116, FORK_WS=117, FORK_LINE_COMMENT=118, 
+    FORK_MULTILINE_COMMENT=119, GROUP=120, SCORE=121, KEY=122, FUSE_LINE_COMMENT=123, 
+    FUSE_MULTILINE_COMMENT=124, FUSE_WS=125, INLINE_STATS=126, INLINE_LINE_COMMENT=127, 
+    INLINE_MULTILINE_COMMENT=128, INLINE_WS=129, JOIN=130, USING=131, JOIN_LINE_COMMENT=132, 
+    JOIN_MULTILINE_COMMENT=133, JOIN_WS=134, LOOKUP_LINE_COMMENT=135, LOOKUP_MULTILINE_COMMENT=136, 
+    LOOKUP_WS=137, LOOKUP_FIELD_LINE_COMMENT=138, LOOKUP_FIELD_MULTILINE_COMMENT=139, 
+    LOOKUP_FIELD_WS=140, MMR_LIMIT=141, MMR_LINE_COMMENT=142, MMR_MULTILINE_COMMENT=143, 
+    MMR_WS=144, MVEXPAND_LINE_COMMENT=145, MVEXPAND_MULTILINE_COMMENT=146, 
+    MVEXPAND_WS=147, ID_PATTERN=148, PROJECT_LINE_COMMENT=149, PROJECT_MULTILINE_COMMENT=150, 
+    PROJECT_WS=151, PROMQL_PARAMS_LINE_COMMENT=152, PROMQL_PARAMS_MULTILINE_COMMENT=153, 
+    PROMQL_PARAMS_WS=154, PROMQL_QUERY_COMMENT=155, PROMQL_SINGLE_QUOTED_STRING=156, 
+    PROMQL_OTHER_QUERY_CONTENT=157, AS=158, RENAME_LINE_COMMENT=159, RENAME_MULTILINE_COMMENT=160, 
+    RENAME_WS=161, SET_LINE_COMMENT=162, SET_MULTILINE_COMMENT=163, SET_WS=164, 
     INFO=165, SHOW_LINE_COMMENT=166, SHOW_MULTILINE_COMMENT=167, SHOW_WS=168;
   public static final int
-    RULE_statements = 0, RULE_singleStatement = 1, RULE_query = 2, RULE_sourceCommand = 3,
-    RULE_processingCommand = 4, RULE_whereCommand = 5, RULE_dataType = 6,
-    RULE_rowCommand = 7, RULE_fields = 8, RULE_field = 9, RULE_fromCommand = 10,
-    RULE_timeSeriesCommand = 11, RULE_externalCommand = 12, RULE_indexPatternAndMetadataFields = 13,
-    RULE_indexPatternOrSubquery = 14, RULE_subquery = 15, RULE_indexPattern = 16,
-    RULE_clusterString = 17, RULE_selectorString = 18, RULE_unquotedIndexString = 19,
-    RULE_indexString = 20, RULE_metadata = 21, RULE_evalCommand = 22, RULE_statsCommand = 23,
-    RULE_aggFields = 24, RULE_aggField = 25, RULE_qualifiedName = 26, RULE_fieldName = 27,
-    RULE_qualifiedNamePattern = 28, RULE_fieldNamePattern = 29, RULE_qualifiedNamePatterns = 30,
-    RULE_identifier = 31, RULE_identifierPattern = 32, RULE_parameter = 33,
-    RULE_doubleParameter = 34, RULE_identifierOrParameter = 35, RULE_stringOrParameter = 36,
-    RULE_limitCommand = 37, RULE_limitByGroupKey = 38, RULE_sortCommand = 39,
-    RULE_orderExpression = 40, RULE_keepCommand = 41, RULE_dropCommand = 42,
-    RULE_renameCommand = 43, RULE_renameClause = 44, RULE_dissectCommand = 45,
-    RULE_dissectCommandOptions = 46, RULE_dissectCommandOption = 47, RULE_commandNamedParameters = 48,
-    RULE_grokCommand = 49, RULE_mvExpandCommand = 50, RULE_explainCommand = 51,
-    RULE_subqueryExpression = 52, RULE_showCommand = 53, RULE_enrichCommand = 54,
-    RULE_enrichPolicyName = 55, RULE_enrichWithClause = 56, RULE_sampleCommand = 57,
-    RULE_changePointCommand = 58, RULE_forkCommand = 59, RULE_forkSubQueries = 60,
-    RULE_forkSubQuery = 61, RULE_forkSubQueryCommand = 62, RULE_forkSubQueryProcessingCommand = 63,
-    RULE_rerankCommand = 64, RULE_completionCommand = 65, RULE_inlineStatsCommand = 66,
-    RULE_fuseCommand = 67, RULE_fuseConfiguration = 68, RULE_fuseKeyByFields = 69,
-    RULE_metricsInfoCommand = 70, RULE_tsInfoCommand = 71, RULE_lookupCommand = 72,
-    RULE_insistCommand = 73, RULE_uriPartsCommand = 74, RULE_registeredDomainCommand = 75,
-    RULE_setCommand = 76, RULE_setField = 77, RULE_mmrCommand = 78, RULE_mmrQueryVectorParams = 79,
-    RULE_booleanExpression = 80, RULE_regexBooleanExpression = 81, RULE_matchBooleanExpression = 82,
-    RULE_valueExpression = 83, RULE_operatorExpression = 84, RULE_primaryExpression = 85,
-    RULE_functionExpression = 86, RULE_functionName = 87, RULE_mapExpression = 88,
-    RULE_entryExpression = 89, RULE_mapValue = 90, RULE_constant = 91, RULE_booleanValue = 92,
-    RULE_numericValue = 93, RULE_decimalValue = 94, RULE_integerValue = 95,
-    RULE_string = 96, RULE_comparisonOperator = 97, RULE_joinCommand = 98,
-    RULE_joinTarget = 99, RULE_joinCondition = 100, RULE_promqlCommand = 101,
-    RULE_valueName = 102, RULE_promqlParam = 103, RULE_promqlParamName = 104,
-    RULE_promqlParamValue = 105, RULE_promqlQueryContent = 106, RULE_promqlQueryPart = 107,
-    RULE_promqlIndexPattern = 108, RULE_promqlClusterString = 109, RULE_promqlSelectorString = 110,
+    RULE_statements = 0, RULE_singleStatement = 1, RULE_query = 2, RULE_sourceCommand = 3, 
+    RULE_processingCommand = 4, RULE_whereCommand = 5, RULE_dataType = 6, 
+    RULE_rowCommand = 7, RULE_fields = 8, RULE_field = 9, RULE_fromCommand = 10, 
+    RULE_timeSeriesCommand = 11, RULE_externalCommand = 12, RULE_indexPatternAndMetadataFields = 13, 
+    RULE_indexPatternOrSubquery = 14, RULE_subquery = 15, RULE_indexPattern = 16, 
+    RULE_clusterString = 17, RULE_selectorString = 18, RULE_unquotedIndexString = 19, 
+    RULE_indexString = 20, RULE_metadata = 21, RULE_evalCommand = 22, RULE_statsCommand = 23, 
+    RULE_aggFields = 24, RULE_aggField = 25, RULE_qualifiedName = 26, RULE_fieldName = 27, 
+    RULE_qualifiedNamePattern = 28, RULE_fieldNamePattern = 29, RULE_qualifiedNamePatterns = 30, 
+    RULE_identifier = 31, RULE_identifierPattern = 32, RULE_parameter = 33, 
+    RULE_doubleParameter = 34, RULE_identifierOrParameter = 35, RULE_stringOrParameter = 36, 
+    RULE_limitCommand = 37, RULE_limitByGroupKey = 38, RULE_sortCommand = 39, 
+    RULE_orderExpression = 40, RULE_keepCommand = 41, RULE_dropCommand = 42, 
+    RULE_renameCommand = 43, RULE_renameClause = 44, RULE_dissectCommand = 45, 
+    RULE_dissectCommandOptions = 46, RULE_dissectCommandOption = 47, RULE_commandNamedParameters = 48, 
+    RULE_grokCommand = 49, RULE_mvExpandCommand = 50, RULE_explainCommand = 51, 
+    RULE_subqueryExpression = 52, RULE_showCommand = 53, RULE_enrichCommand = 54, 
+    RULE_enrichPolicyName = 55, RULE_enrichWithClause = 56, RULE_sampleCommand = 57, 
+    RULE_changePointCommand = 58, RULE_forkCommand = 59, RULE_forkSubQueries = 60, 
+    RULE_forkSubQuery = 61, RULE_forkSubQueryCommand = 62, RULE_forkSubQueryProcessingCommand = 63, 
+    RULE_rerankCommand = 64, RULE_completionCommand = 65, RULE_inlineStatsCommand = 66, 
+    RULE_fuseCommand = 67, RULE_fuseConfiguration = 68, RULE_fuseKeyByFields = 69, 
+    RULE_metricsInfoCommand = 70, RULE_tsInfoCommand = 71, RULE_lookupCommand = 72, 
+    RULE_insistCommand = 73, RULE_uriPartsCommand = 74, RULE_registeredDomainCommand = 75, 
+    RULE_setCommand = 76, RULE_setField = 77, RULE_mmrCommand = 78, RULE_mmrQueryVectorParams = 79, 
+    RULE_booleanExpression = 80, RULE_regexBooleanExpression = 81, RULE_matchBooleanExpression = 82, 
+    RULE_valueExpression = 83, RULE_operatorExpression = 84, RULE_primaryExpression = 85, 
+    RULE_functionExpression = 86, RULE_functionName = 87, RULE_mapExpression = 88, 
+    RULE_entryExpression = 89, RULE_mapValue = 90, RULE_constant = 91, RULE_booleanValue = 92, 
+    RULE_numericValue = 93, RULE_decimalValue = 94, RULE_integerValue = 95, 
+    RULE_string = 96, RULE_comparisonOperator = 97, RULE_joinCommand = 98, 
+    RULE_joinTarget = 99, RULE_joinCondition = 100, RULE_promqlCommand = 101, 
+    RULE_valueName = 102, RULE_promqlParam = 103, RULE_promqlParamName = 104, 
+    RULE_promqlParamValue = 105, RULE_promqlQueryContent = 106, RULE_promqlQueryPart = 107, 
+    RULE_promqlIndexPattern = 108, RULE_promqlClusterString = 109, RULE_promqlSelectorString = 110, 
     RULE_promqlUnquotedIndexString = 111, RULE_promqlIndexString = 112;
   private static String[] makeRuleNames() {
     return new String[] {
-      "statements", "singleStatement", "query", "sourceCommand", "processingCommand",
-      "whereCommand", "dataType", "rowCommand", "fields", "field", "fromCommand",
-      "timeSeriesCommand", "externalCommand", "indexPatternAndMetadataFields",
-      "indexPatternOrSubquery", "subquery", "indexPattern", "clusterString",
-      "selectorString", "unquotedIndexString", "indexString", "metadata", "evalCommand",
-      "statsCommand", "aggFields", "aggField", "qualifiedName", "fieldName",
-      "qualifiedNamePattern", "fieldNamePattern", "qualifiedNamePatterns",
-      "identifier", "identifierPattern", "parameter", "doubleParameter", "identifierOrParameter",
-      "stringOrParameter", "limitCommand", "limitByGroupKey", "sortCommand",
-      "orderExpression", "keepCommand", "dropCommand", "renameCommand", "renameClause",
-      "dissectCommand", "dissectCommandOptions", "dissectCommandOption", "commandNamedParameters",
-      "grokCommand", "mvExpandCommand", "explainCommand", "subqueryExpression",
-      "showCommand", "enrichCommand", "enrichPolicyName", "enrichWithClause",
-      "sampleCommand", "changePointCommand", "forkCommand", "forkSubQueries",
-      "forkSubQuery", "forkSubQueryCommand", "forkSubQueryProcessingCommand",
-      "rerankCommand", "completionCommand", "inlineStatsCommand", "fuseCommand",
-      "fuseConfiguration", "fuseKeyByFields", "metricsInfoCommand", "tsInfoCommand",
-      "lookupCommand", "insistCommand", "uriPartsCommand", "registeredDomainCommand",
-      "setCommand", "setField", "mmrCommand", "mmrQueryVectorParams", "booleanExpression",
-      "regexBooleanExpression", "matchBooleanExpression", "valueExpression",
-      "operatorExpression", "primaryExpression", "functionExpression", "functionName",
-      "mapExpression", "entryExpression", "mapValue", "constant", "booleanValue",
-      "numericValue", "decimalValue", "integerValue", "string", "comparisonOperator",
-      "joinCommand", "joinTarget", "joinCondition", "promqlCommand", "valueName",
-      "promqlParam", "promqlParamName", "promqlParamValue", "promqlQueryContent",
-      "promqlQueryPart", "promqlIndexPattern", "promqlClusterString", "promqlSelectorString",
+      "statements", "singleStatement", "query", "sourceCommand", "processingCommand", 
+      "whereCommand", "dataType", "rowCommand", "fields", "field", "fromCommand", 
+      "timeSeriesCommand", "externalCommand", "indexPatternAndMetadataFields", 
+      "indexPatternOrSubquery", "subquery", "indexPattern", "clusterString", 
+      "selectorString", "unquotedIndexString", "indexString", "metadata", "evalCommand", 
+      "statsCommand", "aggFields", "aggField", "qualifiedName", "fieldName", 
+      "qualifiedNamePattern", "fieldNamePattern", "qualifiedNamePatterns", 
+      "identifier", "identifierPattern", "parameter", "doubleParameter", "identifierOrParameter", 
+      "stringOrParameter", "limitCommand", "limitByGroupKey", "sortCommand", 
+      "orderExpression", "keepCommand", "dropCommand", "renameCommand", "renameClause", 
+      "dissectCommand", "dissectCommandOptions", "dissectCommandOption", "commandNamedParameters", 
+      "grokCommand", "mvExpandCommand", "explainCommand", "subqueryExpression", 
+      "showCommand", "enrichCommand", "enrichPolicyName", "enrichWithClause", 
+      "sampleCommand", "changePointCommand", "forkCommand", "forkSubQueries", 
+      "forkSubQuery", "forkSubQueryCommand", "forkSubQueryProcessingCommand", 
+      "rerankCommand", "completionCommand", "inlineStatsCommand", "fuseCommand", 
+      "fuseConfiguration", "fuseKeyByFields", "metricsInfoCommand", "tsInfoCommand", 
+      "lookupCommand", "insistCommand", "uriPartsCommand", "registeredDomainCommand", 
+      "setCommand", "setField", "mmrCommand", "mmrQueryVectorParams", "booleanExpression", 
+      "regexBooleanExpression", "matchBooleanExpression", "valueExpression", 
+      "operatorExpression", "primaryExpression", "functionExpression", "functionName", 
+      "mapExpression", "entryExpression", "mapValue", "constant", "booleanValue", 
+      "numericValue", "decimalValue", "integerValue", "string", "comparisonOperator", 
+      "joinCommand", "joinTarget", "joinCondition", "promqlCommand", "valueName", 
+      "promqlParam", "promqlParamName", "promqlParamValue", "promqlQueryContent", 
+      "promqlQueryPart", "promqlIndexPattern", "promqlClusterString", "promqlSelectorString", 
       "promqlUnquotedIndexString", "promqlIndexString"
     };
   }
@@ -132,61 +132,61 @@ public class EsqlBaseParser extends ParserConfig {
 
   private static String[] makeLiteralNames() {
     return new String[] {
-      null, null, null, null, "'change_point'", "'enrich'", null, "'completion'",
-      "'dissect'", "'eval'", "'grok'", "'limit'", "'rerank'", "'row'", "'sample'",
-      "'sort'", null, "'where'", "'uri_parts'", "'metrics_info'", "'registered_domain'",
-      "'ts_info'", "'from'", "'ts'", null, "'fork'", "'fuse'", "'inline'",
-      "'inlinestats'", "'lookup'", null, null, null, null, "'mmr'", "'mv_expand'",
-      "'drop'", "'keep'", null, "'promql'", "'rename'", "'set'", "'show'",
-      null, null, null, null, null, null, null, null, null, null, null, null,
-      null, null, "'|'", null, null, null, "'and'", "'asc'", "'='", "'by'",
-      "'::'", "':'", "';'", "','", "'desc'", "'.'", "'false'", "'first'", "'in'",
-      "'is'", "'last'", "'like'", "'not'", "'null'", "'nulls'", "'on'", "'or'",
-      "'?'", "'rlike'", "'true'", "'with'", "'=='", "'=~'", "'!='", "'<'",
-      "'<='", "'>'", "'>='", "'+'", "'-'", "'*'", "'/'", "'%'", "'{'", "'}'",
-      "'??'", null, null, null, "']'", null, "')'", null, null, null, null,
-      null, "'metadata'", null, null, null, null, null, null, null, "'group'",
-      "'score'", "'key'", null, null, null, null, null, null, null, "'join'",
-      "'USING'", null, null, null, null, null, null, null, null, null, null,
-      null, null, null, null, null, null, null, null, null, null, null, null,
+      null, null, null, null, "'change_point'", "'enrich'", null, "'completion'", 
+      "'dissect'", "'eval'", "'grok'", "'limit'", "'rerank'", "'row'", "'sample'", 
+      "'sort'", null, "'where'", "'uri_parts'", "'metrics_info'", "'registered_domain'", 
+      "'ts_info'", "'from'", "'ts'", null, "'fork'", "'fuse'", "'inline'", 
+      "'inlinestats'", "'lookup'", null, null, null, null, "'mmr'", "'mv_expand'", 
+      "'drop'", "'keep'", null, "'promql'", "'rename'", "'set'", "'show'", 
+      null, null, null, null, null, null, null, null, null, null, null, null, 
+      null, null, "'|'", null, null, null, "'and'", "'asc'", "'='", "'by'", 
+      "'::'", "':'", "';'", "','", "'desc'", "'.'", "'false'", "'first'", "'in'", 
+      "'is'", "'last'", "'like'", "'not'", "'null'", "'nulls'", "'on'", "'or'", 
+      "'?'", "'rlike'", "'true'", "'with'", "'=='", "'=~'", "'!='", "'<'", 
+      "'<='", "'>'", "'>='", "'+'", "'-'", "'*'", "'/'", "'%'", "'{'", "'}'", 
+      "'??'", null, null, null, "']'", null, "')'", null, null, null, null, 
+      null, "'metadata'", null, null, null, null, null, null, null, "'group'", 
+      "'score'", "'key'", null, null, null, null, null, null, null, "'join'", 
+      "'USING'", null, null, null, null, null, null, null, null, null, null, 
+      null, null, null, null, null, null, null, null, null, null, null, null, 
       null, null, null, null, "'as'", null, null, null, null, null, null, "'info'"
     };
   }
   private static final String[] _LITERAL_NAMES = makeLiteralNames();
   private static String[] makeSymbolicNames() {
     return new String[] {
-      null, "LINE_COMMENT", "MULTILINE_COMMENT", "WS", "CHANGE_POINT", "ENRICH",
-      "DEV_EXPLAIN", "COMPLETION", "DISSECT", "EVAL", "GROK", "LIMIT", "RERANK",
-      "ROW", "SAMPLE", "SORT", "STATS", "WHERE", "URI_PARTS", "METRICS_INFO",
-      "REGISTERED_DOMAIN", "TS_INFO", "FROM", "TS", "DEV_EXTERNAL", "FORK",
-      "FUSE", "INLINE", "INLINESTATS", "JOIN_LOOKUP", "DEV_JOIN_FULL", "DEV_JOIN_LEFT",
-      "DEV_JOIN_RIGHT", "DEV_LOOKUP", "MMR", "MV_EXPAND", "DROP", "KEEP", "DEV_INSIST",
-      "PROMQL", "RENAME", "SET", "SHOW", "UNKNOWN_CMD", "CHANGE_POINT_LINE_COMMENT",
-      "CHANGE_POINT_MULTILINE_COMMENT", "CHANGE_POINT_WS", "ENRICH_POLICY_NAME",
-      "ENRICH_LINE_COMMENT", "ENRICH_MULTILINE_COMMENT", "ENRICH_WS", "ENRICH_FIELD_LINE_COMMENT",
-      "ENRICH_FIELD_MULTILINE_COMMENT", "ENRICH_FIELD_WS", "EXPLAIN_WS", "EXPLAIN_LINE_COMMENT",
-      "EXPLAIN_MULTILINE_COMMENT", "PIPE", "QUOTED_STRING", "INTEGER_LITERAL",
-      "DECIMAL_LITERAL", "AND", "ASC", "ASSIGN", "BY", "CAST_OP", "COLON",
-      "SEMICOLON", "COMMA", "DESC", "DOT", "FALSE", "FIRST", "IN", "IS", "LAST",
-      "LIKE", "NOT", "NULL", "NULLS", "ON", "OR", "PARAM", "RLIKE", "TRUE",
-      "WITH", "EQ", "CIEQ", "NEQ", "LT", "LTE", "GT", "GTE", "PLUS", "MINUS",
-      "ASTERISK", "SLASH", "PERCENT", "LEFT_BRACES", "RIGHT_BRACES", "DOUBLE_PARAMS",
-      "NAMED_OR_POSITIONAL_PARAM", "NAMED_OR_POSITIONAL_DOUBLE_PARAMS", "OPENING_BRACKET",
-      "CLOSING_BRACKET", "LP", "RP", "UNQUOTED_IDENTIFIER", "QUOTED_IDENTIFIER",
-      "EXPR_LINE_COMMENT", "EXPR_MULTILINE_COMMENT", "EXPR_WS", "METADATA",
-      "UNQUOTED_SOURCE", "FROM_LINE_COMMENT", "FROM_MULTILINE_COMMENT", "FROM_WS",
-      "FORK_WS", "FORK_LINE_COMMENT", "FORK_MULTILINE_COMMENT", "GROUP", "SCORE",
-      "KEY", "FUSE_LINE_COMMENT", "FUSE_MULTILINE_COMMENT", "FUSE_WS", "INLINE_STATS",
-      "INLINE_LINE_COMMENT", "INLINE_MULTILINE_COMMENT", "INLINE_WS", "JOIN",
-      "USING", "JOIN_LINE_COMMENT", "JOIN_MULTILINE_COMMENT", "JOIN_WS", "LOOKUP_LINE_COMMENT",
-      "LOOKUP_MULTILINE_COMMENT", "LOOKUP_WS", "LOOKUP_FIELD_LINE_COMMENT",
-      "LOOKUP_FIELD_MULTILINE_COMMENT", "LOOKUP_FIELD_WS", "MMR_LIMIT", "MMR_LINE_COMMENT",
-      "MMR_MULTILINE_COMMENT", "MMR_WS", "MVEXPAND_LINE_COMMENT", "MVEXPAND_MULTILINE_COMMENT",
-      "MVEXPAND_WS", "ID_PATTERN", "PROJECT_LINE_COMMENT", "PROJECT_MULTILINE_COMMENT",
-      "PROJECT_WS", "PROMQL_PARAMS_LINE_COMMENT", "PROMQL_PARAMS_MULTILINE_COMMENT",
-      "PROMQL_PARAMS_WS", "PROMQL_QUERY_COMMENT", "PROMQL_SINGLE_QUOTED_STRING",
-      "PROMQL_OTHER_QUERY_CONTENT", "AS", "RENAME_LINE_COMMENT", "RENAME_MULTILINE_COMMENT",
-      "RENAME_WS", "SET_LINE_COMMENT", "SET_MULTILINE_COMMENT", "SET_WS", "INFO",
+      null, "LINE_COMMENT", "MULTILINE_COMMENT", "WS", "CHANGE_POINT", "ENRICH", 
+      "DEV_EXPLAIN", "COMPLETION", "DISSECT", "EVAL", "GROK", "LIMIT", "RERANK", 
+      "ROW", "SAMPLE", "SORT", "STATS", "WHERE", "URI_PARTS", "METRICS_INFO", 
+      "REGISTERED_DOMAIN", "TS_INFO", "FROM", "TS", "DEV_EXTERNAL", "FORK", 
+      "FUSE", "INLINE", "INLINESTATS", "JOIN_LOOKUP", "DEV_JOIN_FULL", "DEV_JOIN_LEFT", 
+      "DEV_JOIN_RIGHT", "DEV_LOOKUP", "MMR", "MV_EXPAND", "DROP", "KEEP", "DEV_INSIST", 
+      "PROMQL", "RENAME", "SET", "SHOW", "UNKNOWN_CMD", "CHANGE_POINT_LINE_COMMENT", 
+      "CHANGE_POINT_MULTILINE_COMMENT", "CHANGE_POINT_WS", "ENRICH_POLICY_NAME", 
+      "ENRICH_LINE_COMMENT", "ENRICH_MULTILINE_COMMENT", "ENRICH_WS", "ENRICH_FIELD_LINE_COMMENT", 
+      "ENRICH_FIELD_MULTILINE_COMMENT", "ENRICH_FIELD_WS", "EXPLAIN_WS", "EXPLAIN_LINE_COMMENT", 
+      "EXPLAIN_MULTILINE_COMMENT", "PIPE", "QUOTED_STRING", "INTEGER_LITERAL", 
+      "DECIMAL_LITERAL", "AND", "ASC", "ASSIGN", "BY", "CAST_OP", "COLON", 
+      "SEMICOLON", "COMMA", "DESC", "DOT", "FALSE", "FIRST", "IN", "IS", "LAST", 
+      "LIKE", "NOT", "NULL", "NULLS", "ON", "OR", "PARAM", "RLIKE", "TRUE", 
+      "WITH", "EQ", "CIEQ", "NEQ", "LT", "LTE", "GT", "GTE", "PLUS", "MINUS", 
+      "ASTERISK", "SLASH", "PERCENT", "LEFT_BRACES", "RIGHT_BRACES", "DOUBLE_PARAMS", 
+      "NAMED_OR_POSITIONAL_PARAM", "NAMED_OR_POSITIONAL_DOUBLE_PARAMS", "OPENING_BRACKET", 
+      "CLOSING_BRACKET", "LP", "RP", "UNQUOTED_IDENTIFIER", "QUOTED_IDENTIFIER", 
+      "EXPR_LINE_COMMENT", "EXPR_MULTILINE_COMMENT", "EXPR_WS", "METADATA", 
+      "UNQUOTED_SOURCE", "FROM_LINE_COMMENT", "FROM_MULTILINE_COMMENT", "FROM_WS", 
+      "FORK_WS", "FORK_LINE_COMMENT", "FORK_MULTILINE_COMMENT", "GROUP", "SCORE", 
+      "KEY", "FUSE_LINE_COMMENT", "FUSE_MULTILINE_COMMENT", "FUSE_WS", "INLINE_STATS", 
+      "INLINE_LINE_COMMENT", "INLINE_MULTILINE_COMMENT", "INLINE_WS", "JOIN", 
+      "USING", "JOIN_LINE_COMMENT", "JOIN_MULTILINE_COMMENT", "JOIN_WS", "LOOKUP_LINE_COMMENT", 
+      "LOOKUP_MULTILINE_COMMENT", "LOOKUP_WS", "LOOKUP_FIELD_LINE_COMMENT", 
+      "LOOKUP_FIELD_MULTILINE_COMMENT", "LOOKUP_FIELD_WS", "MMR_LIMIT", "MMR_LINE_COMMENT", 
+      "MMR_MULTILINE_COMMENT", "MMR_WS", "MVEXPAND_LINE_COMMENT", "MVEXPAND_MULTILINE_COMMENT", 
+      "MVEXPAND_WS", "ID_PATTERN", "PROJECT_LINE_COMMENT", "PROJECT_MULTILINE_COMMENT", 
+      "PROJECT_WS", "PROMQL_PARAMS_LINE_COMMENT", "PROMQL_PARAMS_MULTILINE_COMMENT", 
+      "PROMQL_PARAMS_WS", "PROMQL_QUERY_COMMENT", "PROMQL_SINGLE_QUOTED_STRING", 
+      "PROMQL_OTHER_QUERY_CONTENT", "AS", "RENAME_LINE_COMMENT", "RENAME_MULTILINE_COMMENT", 
+      "RENAME_WS", "SET_LINE_COMMENT", "SET_MULTILINE_COMMENT", "SET_WS", "INFO", 
       "SHOW_LINE_COMMENT", "SHOW_MULTILINE_COMMENT", "SHOW_WS"
     };
   }
@@ -291,7 +291,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(226);
           setCommand();
           }
-          }
+          } 
         }
         setState(231);
         _errHandler.sync(this);
@@ -370,7 +370,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_query; }
-
+   
     @SuppressWarnings("this-escape")
     public QueryContext() { }
     public void copyFrom(QueryContext ctx) {
@@ -466,7 +466,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(243);
           processingCommand();
           }
-          }
+          } 
         }
         setState(248);
         _errHandler.sync(this);
@@ -973,7 +973,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_dataType; }
-
+   
     @SuppressWarnings("this-escape")
     public DataTypeContext() { }
     public void copyFrom(DataTypeContext ctx) {
@@ -1126,7 +1126,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(301);
           field();
           }
-          }
+          } 
         }
         setState(306);
         _errHandler.sync(this);
@@ -1415,7 +1415,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(326);
           indexPatternOrSubquery();
           }
-          }
+          } 
         }
         setState(331);
         _errHandler.sync(this);
@@ -1921,7 +1921,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(375);
           match(UNQUOTED_SOURCE);
           }
-          }
+          } 
         }
         setState(380);
         _errHandler.sync(this);
@@ -2117,7 +2117,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(394);
           aggField();
           }
-          }
+          } 
         }
         setState(399);
         _errHandler.sync(this);
@@ -2345,7 +2345,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(421);
           identifierOrParameter();
           }
-          }
+          } 
         }
         setState(426);
         _errHandler.sync(this);
@@ -2512,7 +2512,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(443);
           identifierPattern();
           }
-          }
+          } 
         }
         setState(448);
         _errHandler.sync(this);
@@ -2585,7 +2585,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(451);
           qualifiedNamePattern();
           }
-          }
+          } 
         }
         setState(456);
         _errHandler.sync(this);
@@ -2739,7 +2739,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_parameter; }
-
+   
     @SuppressWarnings("this-escape")
     public ParameterContext() { }
     public void copyFrom(ParameterContext ctx) {
@@ -2830,7 +2830,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_doubleParameter; }
-
+   
     @SuppressWarnings("this-escape")
     public DoubleParameterContext() { }
     public void copyFrom(DoubleParameterContext ctx) {
@@ -3176,7 +3176,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(490);
           booleanExpression(0);
           }
-          }
+          } 
         }
         setState(495);
         _errHandler.sync(this);
@@ -3251,7 +3251,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(499);
           orderExpression();
           }
-          }
+          } 
         }
         setState(504);
         _errHandler.sync(this);
@@ -3518,7 +3518,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(522);
           renameClause();
           }
-          }
+          } 
         }
         setState(527);
         _errHandler.sync(this);
@@ -3731,7 +3731,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(546);
           dissectCommandOption();
           }
-          }
+          } 
         }
         setState(551);
         _errHandler.sync(this);
@@ -3922,7 +3922,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(564);
           string();
           }
-          }
+          } 
         }
         setState(569);
         _errHandler.sync(this);
@@ -4098,7 +4098,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_showCommand; }
-
+   
     @SuppressWarnings("this-escape")
     public ShowCommandContext() { }
     public void copyFrom(ShowCommandContext ctx) {
@@ -4237,7 +4237,7 @@ public class EsqlBaseParser extends ParserConfig {
             setState(592);
             enrichWithClause();
             }
-            }
+            } 
           }
           setState(597);
           _errHandler.sync(this);
@@ -4598,7 +4598,7 @@ public class EsqlBaseParser extends ParserConfig {
       int _alt;
       enterOuterAlt(_localctx, 1);
       {
-      setState(629);
+      setState(629); 
       _errHandler.sync(this);
       _alt = 1;
       do {
@@ -4614,7 +4614,7 @@ public class EsqlBaseParser extends ParserConfig {
         default:
           throw new NoViableAltException(this);
         }
-        setState(631);
+        setState(631); 
         _errHandler.sync(this);
         _alt = getInterpreter().adaptivePredict(_input,47,_ctx);
       } while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -4690,7 +4690,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_forkSubQueryCommand; }
-
+   
     @SuppressWarnings("this-escape")
     public ForkSubQueryCommandContext() { }
     public void copyFrom(ForkSubQueryCommandContext ctx) {
@@ -4786,7 +4786,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(642);
           forkSubQueryProcessingCommand();
           }
-          }
+          } 
         }
         setState(647);
         _errHandler.sync(this);
@@ -5166,7 +5166,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(689);
           fuseConfiguration();
           }
-          }
+          } 
         }
         setState(694);
         _errHandler.sync(this);
@@ -5342,7 +5342,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(710);
           qualifiedName();
           }
-          }
+          } 
         }
         setState(715);
         _errHandler.sync(this);
@@ -5894,7 +5894,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_mmrQueryVectorParams; }
-
+   
     @SuppressWarnings("this-escape")
     public MmrQueryVectorParamsContext() { }
     public void copyFrom(MmrQueryVectorParamsContext ctx) {
@@ -5987,7 +5987,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_booleanExpression; }
-
+   
     @SuppressWarnings("this-escape")
     public BooleanExpressionContext() { }
     public void copyFrom(BooleanExpressionContext ctx) {
@@ -6329,7 +6329,7 @@ public class EsqlBaseParser extends ParserConfig {
             }
             break;
           }
-          }
+          } 
         }
         setState(803);
         _errHandler.sync(this);
@@ -6355,7 +6355,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_regexBooleanExpression; }
-
+   
     @SuppressWarnings("this-escape")
     public RegexBooleanExpressionContext() { }
     public void copyFrom(RegexBooleanExpressionContext ctx) {
@@ -6715,7 +6715,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_valueExpression; }
-
+   
     @SuppressWarnings("this-escape")
     public ValueExpressionContext() { }
     public void copyFrom(ValueExpressionContext ctx) {
@@ -6820,7 +6820,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_operatorExpression; }
-
+   
     @SuppressWarnings("this-escape")
     public OperatorExpressionContext() { }
     public void copyFrom(OperatorExpressionContext ctx) {
@@ -7012,7 +7012,7 @@ public class EsqlBaseParser extends ParserConfig {
             }
             break;
           }
-          }
+          } 
         }
         setState(883);
         _errHandler.sync(this);
@@ -7038,7 +7038,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_primaryExpression; }
-
+   
     @SuppressWarnings("this-escape")
     public PrimaryExpressionContext() { }
     public void copyFrom(PrimaryExpressionContext ctx) {
@@ -7236,7 +7236,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(896);
           dataType();
           }
-          }
+          } 
         }
         setState(901);
         _errHandler.sync(this);
@@ -7334,7 +7334,7 @@ public class EsqlBaseParser extends ParserConfig {
             setState(907);
             booleanExpression(0);
             }
-            }
+            } 
           }
           setState(912);
           _errHandler.sync(this);
@@ -7667,7 +7667,7 @@ public class EsqlBaseParser extends ParserConfig {
       super(parent, invokingState);
     }
     @Override public int getRuleIndex() { return RULE_constant; }
-
+   
     @SuppressWarnings("this-escape")
     public ConstantContext() { }
     public void copyFrom(ConstantContext ctx) {
@@ -8626,7 +8626,7 @@ public class EsqlBaseParser extends ParserConfig {
           setState(1029);
           booleanExpression(0);
           }
-          }
+          } 
         }
         setState(1034);
         _errHandler.sync(this);
@@ -8711,7 +8711,7 @@ public class EsqlBaseParser extends ParserConfig {
             setState(1036);
             promqlParam();
             }
-            }
+            } 
           }
           setState(1041);
           _errHandler.sync(this);
@@ -8752,7 +8752,7 @@ public class EsqlBaseParser extends ParserConfig {
             setState(1051);
             promqlParam();
             }
-            }
+            } 
           }
           setState(1056);
           _errHandler.sync(this);
@@ -8789,7 +8789,7 @@ public class EsqlBaseParser extends ParserConfig {
             setState(1064);
             promqlParam();
             }
-            }
+            } 
           }
           setState(1069);
           _errHandler.sync(this);
@@ -8809,7 +8809,7 @@ public class EsqlBaseParser extends ParserConfig {
 
         setState(1075);
         match(LP);
-        setState(1077);
+        setState(1077); 
         _errHandler.sync(this);
         _la = _input.LA(1);
         do {
@@ -8819,7 +8819,7 @@ public class EsqlBaseParser extends ParserConfig {
           promqlQueryPart();
           }
           }
-          setState(1079);
+          setState(1079); 
           _errHandler.sync(this);
           _la = _input.LA(1);
         } while ( ((((_la - 58)) & ~0x3f) == 0 && ((1L << (_la - 58)) & 37867180460606881L) != 0) || ((((_la - 155)) & ~0x3f) == 0 && ((1L << (_la - 155)) & 7L) != 0) );
@@ -8842,13 +8842,13 @@ public class EsqlBaseParser extends ParserConfig {
             setState(1084);
             promqlParam();
             }
-            }
+            } 
           }
           setState(1089);
           _errHandler.sync(this);
           _alt = getInterpreter().adaptivePredict(_input,105,_ctx);
         }
-        setState(1091);
+        setState(1091); 
         _errHandler.sync(this);
         _alt = 1;
         do {
@@ -8864,7 +8864,7 @@ public class EsqlBaseParser extends ParserConfig {
           default:
             throw new NoViableAltException(this);
           }
-          setState(1093);
+          setState(1093); 
           _errHandler.sync(this);
           _alt = getInterpreter().adaptivePredict(_input,106,_ctx);
         } while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
@@ -9110,7 +9110,7 @@ public class EsqlBaseParser extends ParserConfig {
             setState(1107);
             promqlIndexPattern();
             }
-            }
+            } 
           }
           setState(1112);
           _errHandler.sync(this);
@@ -9270,7 +9270,7 @@ public class EsqlBaseParser extends ParserConfig {
       case PROMQL_OTHER_QUERY_CONTENT:
         enterOuterAlt(_localctx, 1);
         {
-        setState(1120);
+        setState(1120); 
         _errHandler.sync(this);
         _alt = 1;
         do {
@@ -9286,7 +9286,7 @@ public class EsqlBaseParser extends ParserConfig {
           default:
             throw new NoViableAltException(this);
           }
-          setState(1122);
+          setState(1122); 
           _errHandler.sync(this);
           _alt = getInterpreter().adaptivePredict(_input,110,_ctx);
         } while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
