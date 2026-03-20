@@ -124,8 +124,7 @@ public abstract class TenaciousRetryBlobContainer extends FilterBlobContainer {
     @Override
     public void copyBlob(OperationPurpose purpose, BlobContainer sourceBlobContainer, String sourceBlobName, String blobName, long blobSize)
         throws IOException {
-        executeRunnable(() ->
-            super.copyBlob(purpose, sourceBlobContainer, sourceBlobName, blobName, blobSize));
+        executeRunnable(() -> super.copyBlob(purpose, sourceBlobContainer, sourceBlobName, blobName, blobSize));
     }
 
     @Override

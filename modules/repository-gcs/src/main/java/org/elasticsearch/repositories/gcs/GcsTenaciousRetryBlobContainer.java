@@ -1,0 +1,40 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the "Elastic License
+ * 2.0", the "GNU Affero General Public License v3.0 only", and the "Server Side
+ * Public License v 1"; you may not use this file except in compliance with, at
+ * your election, the "Elastic License 2.0", the "GNU Affero General Public
+ * License v3.0 only", or the "Server Side Public License, v 1".
+ */
+
+package org.elasticsearch.repositories.gcs;
+
+import com.google.cloud.storage.StorageException;
+
+import org.elasticsearch.common.blobstore.BlobContainer;
+import org.elasticsearch.common.blobstore.support.TenaciousRetryBlobContainer;
+import org.elasticsearch.core.TimeValue;
+
+import static org.elasticsearch.rest.RestStatus.FORBIDDEN;
+
+public class GcsTenaciousRetryBlobContainer extends TenaciousRetryBlobContainer {
+
+    private final int maxRetries;
+    private final TimeValue delayIncrement;
+
+    public GcsTenaciousRetryBlobContainer(BlobContainer delegate, int maxRetries, TimeValue delayIncrement) {
+        super(delegate, maxRetries, delayIncrement);
+        this.maxRetries = maxRetries;
+        this.delayIncrement = delayIncrement;
+    }
+
+    @Override
+    protected boolean isExceptionRetryable(Exception e) {
+        return e instanceof StorageException se && se.getCode() == FORBIDDEN.getStatus();
+    }
+
+    @Override
+    protected BlobContainer wrapChild(BlobContainer child) {
+        return new GcsTenaciousRetryBlobContainer(child, maxRetries, delayIncrement);
+    }
+}
