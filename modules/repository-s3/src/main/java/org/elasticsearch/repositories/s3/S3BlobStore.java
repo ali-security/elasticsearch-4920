@@ -310,7 +310,7 @@ class S3BlobStore implements BlobStore {
 
     @Override
     public BlobContainer blobContainer(BlobPath path) {
-        return new S3BlobContainer(path, this);
+        return new S3TenaciousRetryBlobContainer(new S3BlobContainer(path, this), Integer.MAX_VALUE, TimeValue.timeValueMillis(50));
     }
 
     private static class DeletionExceptions {

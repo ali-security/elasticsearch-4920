@@ -165,7 +165,11 @@ class GoogleCloudStorageBlobStore implements BlobStore {
 
     @Override
     public BlobContainer blobContainer(BlobPath path) {
-        return new GoogleCloudStorageBlobContainer(path, this);
+        return new GcsTenaciousRetryBlobContainer(
+            new GoogleCloudStorageBlobContainer(path, this),
+            Integer.MAX_VALUE,
+            TimeValue.timeValueMillis(50)
+        );
     }
 
     @Override
