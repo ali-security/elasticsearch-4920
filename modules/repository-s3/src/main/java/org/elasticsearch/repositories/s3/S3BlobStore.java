@@ -310,6 +310,7 @@ class S3BlobStore implements BlobStore {
 
     @Override
     public BlobContainer blobContainer(BlobPath path) {
+        // TO DO : Set up configurable properties for retries.
         return new S3TenaciousRetryBlobContainer(new S3BlobContainer(path, this), Integer.MAX_VALUE, TimeValue.timeValueMillis(50));
     }
 
