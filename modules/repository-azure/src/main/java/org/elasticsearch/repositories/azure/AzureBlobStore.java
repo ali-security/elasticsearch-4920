@@ -12,6 +12,9 @@ package org.elasticsearch.repositories.azure;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
+
+import org.elasticsearch.core.TimeValue;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -236,7 +239,8 @@ public class AzureBlobStore implements BlobStore {
 
     @Override
     public BlobContainer blobContainer(BlobPath path) {
-        return new AzureBlobContainer(path, this);
+        // TO DO: create configurable property.
+        return new AzureTenaciousRetryBlobContainer(new AzureBlobContainer(path, this), Integer.MAX_VALUE, TimeValue.timeValueMillis(50));
     }
 
     @Override
