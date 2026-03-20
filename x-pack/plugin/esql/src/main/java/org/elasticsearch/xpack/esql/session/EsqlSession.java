@@ -251,6 +251,7 @@ public class EsqlSession {
         if (request.parsedStatement() != null) {
             statement = request.parsedStatement();
             gatherPlanTelemetry(statement.plan(), planTelemetry);
+            QuerySettings.validate(statement, SettingsValidationContext.from(remoteClusterService));
         } else {
             statement = parse(request);
         }
