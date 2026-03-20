@@ -53,9 +53,11 @@ import org.elasticsearch.xpack.esql.analysis.PreAnalyzer;
 import org.elasticsearch.xpack.esql.analysis.UnmappedResolution;
 import org.elasticsearch.xpack.esql.analysis.Verifier;
 import org.elasticsearch.xpack.esql.approximation.Approximation;
+import org.elasticsearch.xpack.esql.capabilities.TelemetryAware;
 import org.elasticsearch.xpack.esql.core.expression.Attribute;
 import org.elasticsearch.xpack.esql.core.expression.Expression;
 import org.elasticsearch.xpack.esql.core.expression.FoldContext;
+import org.elasticsearch.xpack.esql.core.expression.function.Function;
 import org.elasticsearch.xpack.esql.core.querydsl.QueryDslTimestampBoundsExtractor;
 import org.elasticsearch.xpack.esql.core.tree.Source;
 import org.elasticsearch.xpack.esql.datasources.ExternalSourceResolution;
@@ -63,6 +65,7 @@ import org.elasticsearch.xpack.esql.datasources.ExternalSourceResolver;
 import org.elasticsearch.xpack.esql.datasources.PartitionFilterHintExtractor;
 import org.elasticsearch.xpack.esql.enrich.EnrichPolicyResolver;
 import org.elasticsearch.xpack.esql.expression.function.EsqlFunctionRegistry;
+import org.elasticsearch.xpack.esql.expression.function.UnresolvedFunction;
 import org.elasticsearch.xpack.esql.index.EsIndex;
 import org.elasticsearch.xpack.esql.index.IndexResolution;
 import org.elasticsearch.xpack.esql.inference.InferenceResolution;
@@ -112,7 +115,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 import static java.util.stream.Collectors.toSet;
 import static org.elasticsearch.xpack.esql.plan.QuerySettings.UNMAPPED_FIELDS;
@@ -245,7 +247,13 @@ public class EsqlSession {
         LOGGER.debug("ESQL query:\n{}", request.query());
         TimeSpanMarker parsingProfile = executionInfo.queryProfile().parsing();
         parsingProfile.start();
-        EsqlStatement statement = request.parsedStatement() != null ? request.parsedStatement() : parse(request);
+        EsqlStatement statement;
+        if (request.parsedStatement() != null) {
+            statement = request.parsedStatement();
+            gatherPlanTelemetry(statement.plan(), planTelemetry);
+        } else {
+            statement = parse(request);
+        }
         gatherSettingsMetrics(statement);
         parsingProfile.stop();
         viewResolver.replaceViews(
@@ -571,7 +579,11 @@ public class EsqlSession {
      * @param newMainPlan callback to build the new main plan based on the subplan results
      * @param cleanup     callback to release any resources hold by the subplan results
      */
-    private record SubPlanAndCallback(LogicalPlan subPlan, Function<Result, LogicalPlan> newMainPlan, Runnable cleanup) {};
+    private record SubPlanAndCallback(
+        LogicalPlan subPlan,
+        java.util.function.Function<Result, LogicalPlan> newMainPlan,
+        Runnable cleanup
+    ) {};
 
     private SubPlanAndCallback firstSubPlan(LogicalPlan optimizedPlan, Approximation approximation, Set<LocalRelation> subPlansResults) {
         if (approximation != null) {
@@ -705,6 +717,34 @@ public class EsqlSession {
             planTelemetry,
             inferenceService.inferenceSettings()
         );
+    }
+
+    /**
+     * Populates {@code planTelemetry} from a pre-built logical plan tree, mirroring what the parser
+     * does via {@code LogicalPlanBuilder.telemetryAccounting} and {@code ExpressionBuilder.visitFunctionName}.
+     * A single {@code forEachDown} pass collects both {@link TelemetryAware} command labels and
+     * {@link Function} names from each node's expressions, avoiding a second traversal of the plan tree.
+     * <p>
+     * The parser produces {@link UnresolvedFunction} nodes for named function calls (e.g.
+     * {@code TO_LONG(x)}), so the {@code instanceof UnresolvedFunction} branch mirrors that path.
+     * The {@code else} branch handles concrete {@link Function} instances, which arise in two cases:
+     * inline cast expressions parsed by {@code ExpressionBuilder.castToType} (e.g. {@code x::long}),
+     * and functions instantiated directly in programmatically-built plans (e.g. Prometheus plan
+     * builders).
+     */
+    static void gatherPlanTelemetry(LogicalPlan plan, PlanTelemetry planTelemetry) {
+        plan.forEachDown(node -> {
+            if (node instanceof TelemetryAware ta) {
+                planTelemetry.command(ta);
+            }
+            node.forEachExpression(Function.class, f -> {
+                if (f instanceof UnresolvedFunction uf) {
+                    planTelemetry.function(uf.name());
+                } else {
+                    planTelemetry.function(f.getClass());
+                }
+            });
+        });
     }
 
     private void gatherSettingsMetrics(EsqlStatement statement) {
