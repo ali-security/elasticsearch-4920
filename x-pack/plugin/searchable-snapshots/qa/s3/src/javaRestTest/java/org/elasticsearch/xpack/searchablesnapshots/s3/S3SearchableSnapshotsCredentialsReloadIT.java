@@ -34,6 +34,7 @@ import org.junit.rules.TestRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.function.UnaryOperator;
 
 import static fixture.aws.AwsCredentialsUtils.ANY_REGION;
@@ -272,8 +273,14 @@ public class S3SearchableSnapshotsCredentialsReloadIT extends ESRestTestCase {
             final Request searchRequest = new Request("GET", mountedIndexName + "/_search");
             searchRequest.addParameter("size", "10000");
             assertThat(
-                expectThrows(ResponseException.class, () -> client().performRequest(searchRequest)).getMessage(),
-                allOf(containsString("Access denied"), containsString("Status Code: 403"), containsString("failed to read data from cache"))
+                /**
+                 * New behaviour https://elasticco.atlassian.net/browse/ES-13905
+                 * 403 is considered CSP transient eventual consistency issue with IAM.
+                 * Suppressed: software.amazon.awssdk.services.s3.model.S3Exception: Access denied
+                 * Therefore, Blobstore infinitely retries with linear backoff until timeout.
+                 */
+                expectThrows(SocketTimeoutException.class, () -> client().performRequest(searchRequest)).getMessage(),
+                allOf(containsString("60.000 milliseconds timeout"), containsString("failed to read data from cache"))
             );
         }
     }
