@@ -34,7 +34,6 @@ import org.elasticsearch.xpack.esql.plan.logical.Subquery;
 import org.elasticsearch.xpack.esql.plan.logical.UnionAll;
 import org.elasticsearch.xpack.esql.plan.logical.UnresolvedRelation;
 import org.elasticsearch.xpack.esql.session.Configuration;
-import org.elasticsearch.xpack.esql.telemetry.PlanTelemetry;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -73,7 +72,6 @@ public class InMemoryViewServiceTests extends AbstractStatementParserTests {
 
     static InMemoryViewService viewService;
     static InMemoryViewResolver viewResolver;
-    PlanTelemetry telemetry = new PlanTelemetry(TEST_FUNCTION_REGISTRY);
     QueryParams queryParams = new QueryParams();
     ProjectId projectId = ProjectId.DEFAULT;
 
@@ -995,7 +993,6 @@ public class InMemoryViewServiceTests extends AbstractStatementParserTests {
             query,
             queryParams,
             new SettingsValidationContext(false, false),
-            telemetry,
             EMPTY_INFERENCE_SETTINGS,
             viewName
         ).plan();

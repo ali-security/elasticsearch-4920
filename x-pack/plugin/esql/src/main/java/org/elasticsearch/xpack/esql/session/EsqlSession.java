@@ -251,11 +251,10 @@ public class EsqlSession {
         EsqlStatement statement;
         if (request.parsedStatement() != null) {
             statement = request.parsedStatement();
-            gatherPlanTelemetry(statement.plan(), planTelemetry);
-            QuerySettings.validate(statement, SettingsValidationContext.from(remoteClusterService));
         } else {
             statement = parse(request);
         }
+        QuerySettings.validate(statement, SettingsValidationContext.from(remoteClusterService));
         gatherSettingsMetrics(statement);
         parsingProfile.stop();
         viewResolver.replaceViews(
@@ -264,7 +263,6 @@ public class EsqlSession {
                 query,
                 request.params(),
                 SettingsValidationContext.from(remoteClusterService),
-                planTelemetry,
                 inferenceService.inferenceSettings(),
                 viewName
             ).plan(),
@@ -283,6 +281,7 @@ public class EsqlSession {
         ActionListener<Versioned<Result>> listener
     ) {
         assert ThreadPool.assertCurrentThreadPool(ThreadPool.Names.SEARCH);
+        gatherPlanTelemetry(viewResolution.plan(), planTelemetry);
         PlanTimeProfile planTimeProfile = request.profile() ? new PlanTimeProfile() : null;
 
         ZoneId timeZone = request.timeZone() == null
@@ -717,37 +716,37 @@ public class EsqlSession {
     }
 
     private EsqlStatement parse(EsqlQueryRequest request) {
-        return parser.parse(
-            request.query(),
-            request.params(),
-            SettingsValidationContext.from(remoteClusterService),
-            planTelemetry,
-            inferenceService.inferenceSettings()
-        );
+        return parser.parse(request.query(), request.params(), inferenceService.inferenceSettings());
     }
 
     /**
-     * Populates {@code planTelemetry} from a pre-built logical plan tree, mirroring what the parser
-     * does via {@code LogicalPlanBuilder.telemetryAccounting} and {@code ExpressionBuilder.visitFunctionName}.
-     * A single {@code forEachDown} pass collects both {@link TelemetryAware} command labels and
-     * {@link Function} names from each node's expressions, avoiding a second traversal of the plan tree.
+     * Populates {@code planTelemetry} from a logical plan tree. Called on the view-resolved plan in
+     * {@link #analyseAndExecute}, so it captures all nodes: the original statement plus any commands
+     * and functions introduced by view expansion.
      * <p>
-     * The parser produces {@link UnresolvedFunction} nodes for named function calls (e.g.
-     * {@code TO_LONG(x)}), so the {@code instanceof UnresolvedFunction} branch mirrors that path.
-     * The {@code else} branch handles concrete {@link Function} instances, which arise in two cases:
-     * inline cast expressions parsed by {@code ExpressionBuilder.castToType} (e.g. {@code x::long}),
-     * and functions instantiated directly in programmatically-built plans (e.g. Prometheus plan
-     * builders).
+     * A single {@code forEachDown} pass collects both {@link TelemetryAware} command labels and
+     * {@link Function} names. Named function calls (e.g. {@code TO_LONG(x)}) produce
+     * {@link UnresolvedFunction} nodes from the parser; the {@code else} branch covers concrete
+     * {@link Function} instances that arise from inline cast expressions (e.g. {@code x::long}) or
+     * programmatically-built plans (e.g. Prometheus plan builders).
+     * <p>
+     * Not all {@link TelemetryAware} nodes have a label (e.g. lookup-table {@link
+     * org.elasticsearch.xpack.esql.plan.logical.UnresolvedRelation} nodes introduced by
+     * {@code LOOKUP JOIN} have a {@code null} command name); those are skipped.
+     * Similarly, not all {@link Function} subclasses are user-callable functions registered in the
+     * function registry (e.g. binary operators and predicates like {@code Add} or {@code GreaterThan}
+     * are {@link Function} subclasses but are never in the registry); those are also skipped.
      */
     static void gatherPlanTelemetry(LogicalPlan plan, PlanTelemetry planTelemetry) {
+        EsqlFunctionRegistry registry = planTelemetry.functionRegistry().snapshotRegistry();
         plan.forEachDown(node -> {
-            if (node instanceof TelemetryAware ta) {
+            if (node instanceof TelemetryAware ta && ta.telemetryLabel() != null) {
                 planTelemetry.command(ta);
             }
             node.forEachExpression(Function.class, f -> {
                 if (f instanceof UnresolvedFunction uf) {
                     planTelemetry.function(uf.name());
-                } else {
+                } else if (registry.functionExists(f.getClass())) {
                     planTelemetry.function(f.getClass());
                 }
             });

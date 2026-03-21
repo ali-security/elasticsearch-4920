@@ -24,7 +24,6 @@ import org.elasticsearch.xpack.esql.plan.EsqlStatement;
 import org.elasticsearch.xpack.esql.plan.IndexPattern;
 import org.elasticsearch.xpack.esql.plan.logical.LogicalPlan;
 import org.elasticsearch.xpack.esql.plan.logical.UnresolvedRelation;
-import org.elasticsearch.xpack.esql.telemetry.PlanTelemetry;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -81,12 +80,7 @@ public abstract class AbstractStatementParserTests extends ESTestCase {
     }
 
     LogicalPlan processingCommand(String e, QueryParams params, Settings settings) {
-        return TEST_PARSER.parseQuery(
-            "row a = 1 | " + e,
-            params,
-            new PlanTelemetry(TEST_FUNCTION_REGISTRY),
-            new InferenceSettings(settings)
-        );
+        return TEST_PARSER.parseQuery("row a = 1 | " + e, params, new InferenceSettings(settings));
     }
 
     static UnresolvedAttribute attribute(String name) {
