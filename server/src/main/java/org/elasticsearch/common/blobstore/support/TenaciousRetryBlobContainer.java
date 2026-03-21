@@ -122,6 +122,11 @@ public abstract class TenaciousRetryBlobContainer extends FilterBlobContainer {
     }
 
     @Override
+    public void writeBlob(OperationPurpose purpose, String blobName, BytesReference bytes, boolean failIfAlreadyExists) throws IOException {
+        executeRunnable(() -> super.writeBlobAtomic(purpose, blobName, bytes, failIfAlreadyExists));
+    }
+
+    @Override
     public void copyBlob(OperationPurpose purpose, BlobContainer sourceBlobContainer, String sourceBlobName, String blobName, long blobSize)
         throws IOException {
         executeRunnable(() -> super.copyBlob(purpose, sourceBlobContainer, sourceBlobName, blobName, blobSize));
