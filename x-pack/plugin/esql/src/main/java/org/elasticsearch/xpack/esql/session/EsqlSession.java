@@ -54,9 +54,11 @@ import org.elasticsearch.xpack.esql.analysis.UnmappedResolution;
 import org.elasticsearch.xpack.esql.analysis.Verifier;
 import org.elasticsearch.xpack.esql.approximation.Approximation;
 import org.elasticsearch.xpack.esql.approximation.ApproximationSettings;
+import org.elasticsearch.xpack.esql.capabilities.TelemetryAware;
 import org.elasticsearch.xpack.esql.core.expression.Attribute;
 import org.elasticsearch.xpack.esql.core.expression.Expression;
 import org.elasticsearch.xpack.esql.core.expression.FoldContext;
+import org.elasticsearch.xpack.esql.core.expression.function.Function;
 import org.elasticsearch.xpack.esql.core.querydsl.QueryDslTimestampBoundsExtractor;
 import org.elasticsearch.xpack.esql.core.tree.Source;
 import org.elasticsearch.xpack.esql.datasources.ExternalSourceResolution;
@@ -64,6 +66,7 @@ import org.elasticsearch.xpack.esql.datasources.ExternalSourceResolver;
 import org.elasticsearch.xpack.esql.datasources.PartitionFilterHintExtractor;
 import org.elasticsearch.xpack.esql.enrich.EnrichPolicyResolver;
 import org.elasticsearch.xpack.esql.expression.function.EsqlFunctionRegistry;
+import org.elasticsearch.xpack.esql.expression.function.UnresolvedFunction;
 import org.elasticsearch.xpack.esql.index.EsIndex;
 import org.elasticsearch.xpack.esql.index.IndexResolution;
 import org.elasticsearch.xpack.esql.inference.InferenceResolution;
@@ -113,7 +116,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 import static java.util.stream.Collectors.toSet;
 import static org.elasticsearch.xpack.esql.plan.QuerySettings.UNMAPPED_FIELDS;
@@ -243,7 +245,7 @@ public class EsqlSession {
         executionInfo.queryProfile().planning().start();
         assert ThreadPool.assertCurrentThreadPool(ThreadPool.Names.SEARCH);
         assert executionInfo != null : "Null EsqlExecutionInfo";
-        LOGGER.debug("ESQL query:\n{}", request.query());
+        LOGGER.debug("ESQL query:\n{}", request.queryDescription());
         TimeSpanMarker parsingProfile = executionInfo.queryProfile().parsing();
         parsingProfile.start();
         EsqlStatement statement = parse(request);
@@ -255,7 +257,6 @@ public class EsqlSession {
                 query,
                 request.params(),
                 SettingsValidationContext.from(remoteClusterService),
-                planTelemetry,
                 inferenceService.inferenceSettings(),
                 viewName
             ).plan(),
@@ -274,6 +275,7 @@ public class EsqlSession {
         ActionListener<Versioned<Result>> listener
     ) {
         assert ThreadPool.assertCurrentThreadPool(ThreadPool.Names.SEARCH);
+        gatherPlanTelemetry(viewResolution.plan(), planTelemetry);
         PlanTimeProfile planTimeProfile = request.profile() ? new PlanTimeProfile() : null;
 
         ZoneId timeZone = request.timeZone() == null
@@ -577,7 +579,11 @@ public class EsqlSession {
      * @param newMainPlan callback to build the new main plan based on the subplan results
      * @param cleanup     callback to release any resources hold by the subplan results
      */
-    private record SubPlanAndCallback(LogicalPlan subPlan, Function<Result, LogicalPlan> newMainPlan, Runnable cleanup) {};
+    private record SubPlanAndCallback(
+        LogicalPlan subPlan,
+        java.util.function.Function<Result, LogicalPlan> newMainPlan,
+        Runnable cleanup
+    ) {};
 
     private SubPlanAndCallback firstSubPlan(LogicalPlan optimizedPlan, Approximation approximation, Set<LocalRelation> subPlansResults) {
         if (approximation != null) {
@@ -704,13 +710,41 @@ public class EsqlSession {
     }
 
     private EsqlStatement parse(EsqlQueryRequest request) {
-        return parser.parse(
-            request.query(),
-            request.params(),
-            SettingsValidationContext.from(remoteClusterService),
-            planTelemetry,
-            inferenceService.inferenceSettings()
-        );
+        return request.parse(parser, SettingsValidationContext.from(remoteClusterService), inferenceService.inferenceSettings());
+    }
+
+    /**
+     * Populates {@code planTelemetry} from a logical plan tree. Called on the view-resolved plan in
+     * {@link #analyseAndExecute}, so it captures all nodes: the original statement plus any commands
+     * and functions introduced by view expansion.
+     * <p>
+     * A single {@code forEachDown} pass collects both {@link TelemetryAware} command labels and
+     * {@link Function} names. Named function calls (e.g. {@code TO_LONG(x)}) produce
+     * {@link UnresolvedFunction} nodes from the parser; the {@code else} branch covers concrete
+     * {@link Function} instances that arise from inline cast expressions (e.g. {@code x::long}) or
+     * programmatically-built plans (e.g. Prometheus plan builders).
+     * <p>
+     * Not all {@link TelemetryAware} nodes have a label (e.g. lookup-table {@link
+     * org.elasticsearch.xpack.esql.plan.logical.UnresolvedRelation} nodes introduced by
+     * {@code LOOKUP JOIN} have a {@code null} command name); those are skipped.
+     * Similarly, not all {@link Function} subclasses are user-callable functions registered in the
+     * function registry (e.g. binary operators and predicates like {@code Add} or {@code GreaterThan}
+     * are {@link Function} subclasses but are never in the registry); those are also skipped.
+     */
+    static void gatherPlanTelemetry(LogicalPlan plan, PlanTelemetry planTelemetry) {
+        EsqlFunctionRegistry registry = planTelemetry.functionRegistry().snapshotRegistry();
+        plan.forEachDown(node -> {
+            if (node instanceof TelemetryAware ta && ta.telemetryLabel() != null) {
+                planTelemetry.command(ta);
+            }
+            node.forEachExpression(Function.class, f -> {
+                if (f instanceof UnresolvedFunction uf) {
+                    planTelemetry.function(uf.name());
+                } else if (registry.functionExists(f.getClass())) {
+                    planTelemetry.function(f.getClass());
+                }
+            });
+        });
     }
 
     private void gatherSettingsMetrics(EsqlStatement statement) {

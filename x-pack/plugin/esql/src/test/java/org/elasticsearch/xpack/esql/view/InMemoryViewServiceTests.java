@@ -34,7 +34,6 @@ import org.elasticsearch.xpack.esql.plan.logical.Subquery;
 import org.elasticsearch.xpack.esql.plan.logical.UnionAll;
 import org.elasticsearch.xpack.esql.plan.logical.UnresolvedRelation;
 import org.elasticsearch.xpack.esql.session.Configuration;
-import org.elasticsearch.xpack.esql.telemetry.PlanTelemetry;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -57,7 +56,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.elasticsearch.xpack.esql.EsqlTestUtils.TEST_FUNCTION_REGISTRY;
 import static org.elasticsearch.xpack.esql.EsqlTestUtils.TEST_PARSER;
 import static org.elasticsearch.xpack.esql.EsqlTestUtils.as;
 import static org.elasticsearch.xpack.esql.EsqlTestUtils.equalToIgnoringIds;
@@ -73,7 +71,6 @@ public class InMemoryViewServiceTests extends AbstractStatementParserTests {
 
     static InMemoryViewService viewService;
     static InMemoryViewResolver viewResolver;
-    PlanTelemetry telemetry = new PlanTelemetry(TEST_FUNCTION_REGISTRY);
     QueryParams queryParams = new QueryParams();
     ProjectId projectId = ProjectId.DEFAULT;
 
@@ -991,14 +988,8 @@ public class InMemoryViewServiceTests extends AbstractStatementParserTests {
     }
 
     private LogicalPlan parse(String query, String viewName) {
-        return TEST_PARSER.parseView(
-            query,
-            queryParams,
-            new SettingsValidationContext(false, false),
-            telemetry,
-            EMPTY_INFERENCE_SETTINGS,
-            viewName
-        ).plan();
+        return TEST_PARSER.parseView(query, queryParams, new SettingsValidationContext(false, false), EMPTY_INFERENCE_SETTINGS, viewName)
+            .plan();
     }
 
     private static Matcher<LogicalPlan> matchesPlan(LogicalPlan plan) {
