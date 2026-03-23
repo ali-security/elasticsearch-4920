@@ -19,6 +19,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.logging.LogManager;
 import org.elasticsearch.logging.Logger;
+import org.elasticsearch.xpack.esql.action.EsqlQueryRequest;
 import org.elasticsearch.xpack.esql.core.util.StringUtils;
 import org.elasticsearch.xpack.esql.inference.InferenceSettings;
 import org.elasticsearch.xpack.esql.plan.EsqlStatement;
@@ -133,6 +134,11 @@ public class EsqlParser {
         return parsed;
     }
 
+    /**
+     * Parses the given query into an {@link EsqlStatement}. Note that query settings (accessible via
+     * {@link EsqlStatement#settings()}) are <em>not</em> validated by this method — the caller is responsible for
+     * performing any necessary validation before using them.
+     */
     public EsqlStatement parse(String query, QueryParams params, InferenceSettings inferenceSettings) {
         var parsed = createStatement(query, params, inferenceSettings, null);
         if (log.isDebugEnabled()) {
@@ -145,6 +151,11 @@ public class EsqlParser {
     /**
      * Parse a view query with the given view name. The view name is used to tag all Source objects
      * so they can be correctly deserialized when the view positions exceed the outer query's length.
+     *
+     * <p>Unlike the top-level query, which is validated inside {@link EsqlQueryRequest#parse}, view
+     * bodies are parsed inside a callback that has no request object — so settings validation is
+     * performed here, where the {@link SettingsValidationContext} is available, rather than at the
+     * call site.
      */
     public EsqlStatement parseView(
         String query,

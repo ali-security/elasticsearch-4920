@@ -245,16 +245,10 @@ public class EsqlSession {
         executionInfo.queryProfile().planning().start();
         assert ThreadPool.assertCurrentThreadPool(ThreadPool.Names.SEARCH);
         assert executionInfo != null : "Null EsqlExecutionInfo";
-        LOGGER.debug("ESQL query:\n{}", request.query());
+        LOGGER.debug("ESQL query:\n{}", request.queryDescription());
         TimeSpanMarker parsingProfile = executionInfo.queryProfile().parsing();
         parsingProfile.start();
-        EsqlStatement statement;
-        if (request.parsedStatement() != null) {
-            statement = request.parsedStatement();
-        } else {
-            statement = parse(request);
-        }
-        QuerySettings.validate(statement, SettingsValidationContext.from(remoteClusterService));
+        EsqlStatement statement = parse(request);
         gatherSettingsMetrics(statement);
         parsingProfile.stop();
         viewResolver.replaceViews(
@@ -716,7 +710,7 @@ public class EsqlSession {
     }
 
     private EsqlStatement parse(EsqlQueryRequest request) {
-        return parser.parse(request.query(), request.params(), inferenceService.inferenceSettings());
+        return request.parse(parser, SettingsValidationContext.from(remoteClusterService), inferenceService.inferenceSettings());
     }
 
     /**

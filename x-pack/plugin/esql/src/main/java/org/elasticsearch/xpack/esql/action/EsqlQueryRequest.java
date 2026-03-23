@@ -15,6 +15,7 @@ import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.breaker.NoopCircuitBreaker;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.core.Nullable;
 import org.elasticsearch.core.Releasables;
 import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -24,8 +25,12 @@ import org.elasticsearch.tasks.TaskId;
 import org.elasticsearch.xpack.core.async.AsyncExecutionId;
 import org.elasticsearch.xpack.esql.Column;
 import org.elasticsearch.xpack.esql.approximation.ApproximationSettings;
+import org.elasticsearch.xpack.esql.inference.InferenceSettings;
+import org.elasticsearch.xpack.esql.parser.EsqlParser;
 import org.elasticsearch.xpack.esql.parser.QueryParams;
 import org.elasticsearch.xpack.esql.plan.EsqlStatement;
+import org.elasticsearch.xpack.esql.plan.QuerySettings;
+import org.elasticsearch.xpack.esql.plan.SettingsValidationContext;
 import org.elasticsearch.xpack.esql.plugin.EsqlQueryStatus;
 import org.elasticsearch.xpack.esql.plugin.QueryPragmas;
 
@@ -69,14 +74,6 @@ public class EsqlQueryRequest extends org.elasticsearch.xpack.core.esql.action.E
      */
     private final Map<String, Map<String, Column>> tables = new TreeMap<>();
 
-    /**
-     * An optional pre-built statement that bypasses ES|QL string parsing.
-     * This is transient and never serialized over the wire. It's used by internal callers
-     * (such as the Prometheus REST endpoints) that construct a {@link EsqlStatement} directly
-     * instead of going through ES|QL string construction and parsing.
-     */
-    private EsqlStatement parsedStatement;
-
     public static EsqlQueryRequest syncEsqlQueryRequest(String query) {
         return new EsqlQueryRequest(false, query);
     }
@@ -85,31 +82,38 @@ public class EsqlQueryRequest extends org.elasticsearch.xpack.core.esql.action.E
         return new EsqlQueryRequest(true, query);
     }
 
-    /**
-     * Creates a synchronous request with a pre-built statement, bypassing ES|QL string parsing.
-     * The query string is only used for logging/display since the plan is already built.
-     */
-    public static EsqlQueryRequest syncEsqlQueryRequestWithPlan(EsqlStatement statement) {
-        String queryText = statement.plan().sourceText();
-        EsqlQueryRequest request = new EsqlQueryRequest(false, queryText.isEmpty() ? "[pre-built plan]" : queryText);
-        request.parsedStatement = statement;
-        return request;
-    }
-
-    /**
-     * Creates an asynchronous request with a pre-built statement, bypassing ES|QL string parsing.
-     * The query string is only used for logging/display since the plan is already built.
-     */
-    public static EsqlQueryRequest asyncEsqlQueryRequestWithPlan(EsqlStatement statement) {
-        String queryText = statement.plan().sourceText();
-        EsqlQueryRequest request = new EsqlQueryRequest(true, queryText.isEmpty() ? "[pre-built plan]" : queryText);
-        request.parsedStatement = statement;
-        return request;
-    }
-
-    private EsqlQueryRequest(boolean async, String query) {
+    EsqlQueryRequest(boolean async, String query) {
         this.async = async;
         this.query = query;
+    }
+
+    /**
+     * Copy constructor. Copies all fields from {@code source}. Subclasses that need to override
+     * specific fields (e.g. {@link PreparedEsqlQueryRequest} overrides {@code query}) should do
+     * so after calling this constructor. If a new field is added to this class, it must also be
+     * added here.
+     */
+    EsqlQueryRequest(EsqlQueryRequest source) {
+        this.async = source.async;
+        this.query = source.query;
+        this.columnar = source.columnar;
+        this.profile = source.profile;
+        this.includeCCSMetadata = source.includeCCSMetadata;
+        this.includeExecutionMetadata = source.includeExecutionMetadata;
+        this.timeZone = source.timeZone;
+        this.locale = source.locale;
+        this.filter = source.filter;
+        this.pragmas = source.pragmas;
+        this.params = source.params;
+        this.waitForCompletionTimeout = source.waitForCompletionTimeout;
+        this.keepAlive = source.keepAlive;
+        this.keepOnCompletion = source.keepOnCompletion;
+        this.onSnapshotBuild = source.onSnapshotBuild;
+        this.acceptedPragmaRisks = source.acceptedPragmaRisks;
+        this.allowPartialResults = source.allowPartialResults;
+        this.projectRouting = source.projectRouting;
+        this.approximation = source.approximation;
+        this.tables.putAll(source.tables);
     }
 
     public EsqlQueryRequest() {}
@@ -120,11 +124,7 @@ public class EsqlQueryRequest extends org.elasticsearch.xpack.core.esql.action.E
 
     @Override
     public ActionRequestValidationException validate() {
-        ActionRequestValidationException validationException = null;
-        if (Strings.hasText(query) == false) {
-            validationException = addValidationError("[" + RequestXContent.QUERY_FIELD + "] is required", validationException);
-        }
-
+        ActionRequestValidationException validationException = validateQuery();
         if (onSnapshotBuild == false) {
             if (pragmas.isEmpty() == false && acceptedPragmaRisks == false) {
                 validationException = addValidationError(
@@ -142,21 +142,41 @@ public class EsqlQueryRequest extends org.elasticsearch.xpack.core.esql.action.E
         return validationException;
     }
 
+    protected ActionRequestValidationException validateQuery() {
+        if (Strings.hasText(query) == false) {
+            return addValidationError("[" + RequestXContent.QUERY_FIELD + "] is required", null);
+        }
+        return null;
+    }
+
     public EsqlQueryRequest query(String query) {
         this.query = query;
         return this;
     }
 
     @Override
+    @Nullable
     public String query() {
         return query;
     }
 
     /**
-     * Returns the pre-built statement, or {@code null} if the query string should be parsed.
+     * Returns a non-null human-readable description of the query for logging, task descriptions, and error messages.
+     * For regular requests this is the same as {@link #query()}. Overridden by {@link PreparedEsqlQueryRequest}
+     * to return a display string when there is no query text.
      */
-    public EsqlStatement parsedStatement() {
-        return parsedStatement;
+    public String queryDescription() {
+        return query();
+    }
+
+    /**
+     * Parses the query string into an {@link EsqlStatement} and validates its settings.
+     * Overridden by {@link PreparedEsqlQueryRequest} to return a pre-built statement directly.
+     */
+    public EsqlStatement parse(EsqlParser parser, SettingsValidationContext settingsValidationCtx, InferenceSettings inferenceSettings) {
+        EsqlStatement statement = parser.parse(query(), params(), inferenceSettings);
+        QuerySettings.validate(statement, settingsValidationCtx);
+        return statement;
     }
 
     public boolean async() {
@@ -318,7 +338,7 @@ public class EsqlQueryRequest extends org.elasticsearch.xpack.core.esql.action.E
     @Override
     public Task createTask(TaskId taskId, String type, String action, TaskId parentTaskId, Map<String, String> headers) {
         var status = new EsqlQueryStatus(new AsyncExecutionId(UUIDs.randomBase64UUID(), taskId), keepAlive);
-        return new EsqlQueryRequestTask(query, taskId.getId(), type, action, parentTaskId, headers, status);
+        return new EsqlQueryRequestTask(queryDescription(), taskId.getId(), type, action, parentTaskId, headers, status);
     }
 
     private static class EsqlQueryRequestTask extends CancellableTask {
