@@ -50,6 +50,9 @@ You can interact with {{esql}} in two ways:
 - **Interactive interfaces**: Work with {{esql}} through Elastic user interfaces including Kibana Discover, Dashboards, Dev Tools, and analysis tools in Elastic Security and Observability.
   - Refer to [Using {{esql}} in {{kib}}](docs-content://explore-analyze/query-filter/languages/esql-kibana.md).
 
+## Performance guidelines [esql-performance]
+
+For patterns that often reduce latency and resource use—filters, projections, joins, and how the optimizer plans pipes—see [{{esql}} performance guidelines](/reference/query-languages/esql/esql-performance.md). That page complements [{{esql}} limitations](/reference/query-languages/esql/limitations.md) and the circuit breaker settings below, which protect the cluster when queries approach memory limits.
 
 ## ES|QL circuit breaker settings [esql-circuit-breaker]
 
