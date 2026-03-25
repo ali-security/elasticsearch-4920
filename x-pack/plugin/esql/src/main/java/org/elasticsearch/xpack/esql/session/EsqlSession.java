@@ -15,6 +15,7 @@ import org.elasticsearch.action.fieldcaps.FieldCapabilitiesFailure;
 import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.action.support.SubscribableListener;
 import org.elasticsearch.cluster.metadata.ProjectMetadata;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.TriConsumer;
 import org.elasticsearch.common.collect.Iterators;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -316,6 +317,7 @@ public class EsqlSession {
 
         analyzedPlan(
             plan,
+            viewResolution.viewQueries(),
             statement.setting(UNMAPPED_FIELDS),
             finalConfiguration,
             executionInfo,
@@ -780,8 +782,9 @@ public class EsqlSession {
         }
     }
 
-    public void analyzedPlan(
+    private void analyzedPlan(
         LogicalPlan parsed,
+        Map<String, String> viewResolution,
         UnmappedResolution unmappedResolution,
         Configuration configuration,
         EsqlExecutionInfo executionInfo,
@@ -801,7 +804,7 @@ public class EsqlSession {
             parsed,
             preAnalysis.enriches().isEmpty() == false,
             unmappedResolution == UnmappedResolution.LOAD
-        ).withMinimumTransportVersion(localClusterMinimumVersion);
+        ).withViewResolution(viewResolution).withMinimumTransportVersion(localClusterMinimumVersion);
         String description = requestFilter == null ? "the only attempt without filter" : "first attempt with filter";
 
         resolveIndicesAndAnalyze(
@@ -1208,6 +1211,7 @@ public class EsqlSession {
                 result,
                 (e, r, l) -> preAnalyzeFlatMainIndices(
                     e.getKey(),
+                    Strings.collectionToCommaDelimitedString(result.viewResolution().keySet()),
                     e.getValue(),
                     configuration.projectRouting(),
                     preAnalysis,
@@ -1268,6 +1272,7 @@ public class EsqlSession {
 
     private void preAnalyzeFlatMainIndices(
         IndexPattern indexPattern,
+        String optionalPattern,
         IndexMode indexMode,
         String projectRouting,
         PreAnalyzer.PreAnalysis preAnalysis,
@@ -1277,8 +1282,9 @@ public class EsqlSession {
         ActionListener<PreAnalysisResult> listener
     ) {
         executionInfo.queryProfile().incFieldCapsCalls();
-        indexResolver.resolveMainFlatWorldIndicesVersioned(
+        indexResolver.resolveMainFlatIndicesVersioned(
             indexPattern.indexPattern(),
+            optionalPattern,
             projectRouting,
             result.fieldNames,
             createQueryFilter(indexMode, requestFilter),
@@ -1473,6 +1479,7 @@ public class EsqlSession {
         Set<String> fieldNames,
         Set<String> wildcardJoinIndices,
         Map<IndexPattern, IndexResolution> indexResolution,
+        Map<String, String> viewResolution,
         Map<String, IndexResolution> lookupIndices,
         EnrichResolution enrichResolution,
         InferenceResolution inferenceResolution,
@@ -1484,6 +1491,7 @@ public class EsqlSession {
             this(
                 fieldNames,
                 wildcardJoinIndices,
+                new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
                 null,
@@ -1503,11 +1511,26 @@ public class EsqlSession {
             return this;
         }
 
+        PreAnalysisResult withViewResolution(Map<String, String> viewResolution) {
+            return new PreAnalysisResult(
+                fieldNames,
+                wildcardJoinIndices,
+                indexResolution,
+                viewResolution,
+                lookupIndices,
+                enrichResolution,
+                inferenceResolution,
+                externalSourceResolution,
+                minimumTransportVersion
+            );
+        }
+
         PreAnalysisResult withEnrichResolution(EnrichResolution enrichResolution) {
             return new PreAnalysisResult(
                 fieldNames,
                 wildcardJoinIndices,
                 indexResolution,
+                viewResolution,
                 lookupIndices,
                 enrichResolution,
                 inferenceResolution,
@@ -1521,6 +1544,7 @@ public class EsqlSession {
                 fieldNames,
                 wildcardJoinIndices,
                 indexResolution,
+                viewResolution,
                 lookupIndices,
                 enrichResolution,
                 inferenceResolution,
@@ -1534,6 +1558,7 @@ public class EsqlSession {
                 fieldNames,
                 wildcardJoinIndices,
                 indexResolution,
+                viewResolution,
                 lookupIndices,
                 enrichResolution,
                 inferenceResolution,
@@ -1553,6 +1578,7 @@ public class EsqlSession {
                 fieldNames,
                 wildcardJoinIndices,
                 indexResolution,
+                viewResolution,
                 lookupIndices,
                 enrichResolution,
                 inferenceResolution,
