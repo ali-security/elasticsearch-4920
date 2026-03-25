@@ -1,9 +1,12 @@
 area: CCS
 breaking:
-  area: CCS
-  details: Please describe the details of this change for the release notes. You can
-    use asciidoc.
-  impact: Please describe the impact of this change to users
+  area: REST API
+  details: Cluster exclusions in cross-cluster search index expressions are now processed
+    left-to-right, matching the existing behavior of index exclusions. An exclusion
+    only applies to clusters already included by a preceding expression.
+  impact: Queries that place a cluster exclusion before the corresponding inclusion
+    (e.g., `/-remote1:*,*:*/_search`) will now return an error. Reorder expressions
+    so that exclusions follow inclusions (e.g., `/*:*,-remote1:*/_search`).
   notable: false
   title: Order remote cluster exclusions
 issues: []
