@@ -943,6 +943,7 @@ version is not allowed:
   - length: { values: 1 }
   - match: { values.0: [20] }
 
+---
 "Test IN with empty list parameter returns no rows":
   - requires:
       test_runner_features: [ capabilities ]
@@ -958,6 +959,7 @@ version is not allowed:
   - length: { values: 1 }
   - match: { values.0: [0] }
 
+---
 "Test NOT IN with empty list parameter returns all rows":
   - requires:
       test_runner_features: [ capabilities ]
@@ -973,6 +975,7 @@ version is not allowed:
   - length: { values: 1 }
   - match: { values.0: [40] }
 
+---
 "Test IS NULL OR IN fallback - null param returns all rows":
   - requires:
       test_runner_features: [ capabilities ]
@@ -992,6 +995,7 @@ version is not allowed:
   - length: { values: 1 }
   - match: { values.0: [40] }
 
+---
 "Test IS NULL OR IN fallback - non-empty list filters rows":
   - requires:
       test_runner_features: [ capabilities ]

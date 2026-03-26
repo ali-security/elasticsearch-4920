@@ -2668,7 +2668,7 @@ FROM mv_text
 | KEEP @timestamp, message
 | SORT @timestamp
 ;
-warningRegex:evaluation of \[message in .*\] failed, treating result as null. Only first 20 failures recorded.
+warningRegex:evaluation of \[message IN .*\] failed, treating result as null. Only first 20 failures recorded.
 warningRegex:java.lang.IllegalArgumentException: single-value function encountered multi-value
 
 // ["Connected to 10.1.0.1", "Banana"] is expanded to individual scalars; multi-value rows are excluded with a warning
@@ -2683,7 +2683,7 @@ FROM employees
 | KEEP emp_no, job_positions
 | SORT emp_no
 ;
-warningRegex:evaluation of \[job_positions in .*\] failed, treating result as null. Only first 20 failures recorded.
+warningRegex:evaluation of \[job_positions IN .*\] failed, treating result as null. Only first 20 failures recorded.
 warningRegex:java.lang.IllegalArgumentException: single-value function encountered multi-value
 
 // ["Tech Lead", "Data Scientist", "Senior Team Lead"] is expanded to individual scalars; multi-value rows are excluded with a warning
