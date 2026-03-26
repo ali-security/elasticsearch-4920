@@ -143,7 +143,7 @@ public class OpenAiUnifiedChatCompletionRequestTests extends ESTestCase {
             TaskType.CHAT_COMPLETION,
             "service",
             new OpenAiChatCompletionServiceSettings("model", "www.google.com", "org", null, null),
-            new OpenAiChatCompletionTaskSettings("user", Map.of(HttpHeaders.CONTENT_TYPE, "text/plain", HttpHeaders.AUTHORIZATION, "Bearer wrong-key")),
+            new OpenAiChatCompletionTaskSettings("user", Map.of(HttpHeaders.CONTENT_TYPE, "text/plain", HttpHeaders.AUTHORIZATION, "Bearer should-be-overridden")),
             new DefaultSecretSettings(new SecureString("secret".toCharArray()))
         );
 

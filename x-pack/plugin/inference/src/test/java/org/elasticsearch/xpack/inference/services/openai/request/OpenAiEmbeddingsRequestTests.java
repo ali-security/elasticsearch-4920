@@ -84,7 +84,7 @@ public class OpenAiEmbeddingsRequestTests extends ESTestCase {
             new OpenAiEmbeddingsServiceSettings("model", URI.create("www.elastic.co"), "org", null, null, null, false, null),
             new OpenAiEmbeddingsTaskSettings(
                 "user",
-                Map.of(HttpHeaders.CONTENT_TYPE, "text/plain", HttpHeaders.AUTHORIZATION, "Bearer wrong-key")
+                Map.of(HttpHeaders.CONTENT_TYPE, "text/plain", HttpHeaders.AUTHORIZATION, "Bearer should-be-overridden")
             ),
             null,
             new DefaultSecretSettings(new SecureString("secret".toCharArray()))
