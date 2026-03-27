@@ -95,6 +95,13 @@ buildParams.bwcVersions.withWireCompatible { bwcVersion, baseName ->
       }
     }
 
+    if (bwcVersion.before(Version.fromString("9.4.0"))) {
+      /* Deprecating and hiding the confidence_interval param triggers
+         an failing assertion in the mapping parser. See #144739  */
+      excludeList.add("search.vectors/42_knn_search_int4_flat/*")
+      excludeList.add("search.vectors/42_knn_search_int4_flat_bfloat/*")
+    }
+
     tasks.register("${baseName}#mixedClusterTest", StandaloneRestIntegTestTask) {
       useCluster baseCluster
       mustRunAfter("precommit")
