@@ -947,7 +947,11 @@ version is not allowed:
 "Test IN with empty list parameter returns no rows":
   - requires:
       test_runner_features: [ capabilities ]
-      capabilities: [ in_list_query_params ]
+      capabilities:
+        - method: POST
+          path: /_query
+          parameters: [ capabilities ]
+          capabilities: [ in_list_query_params ]
       reason: "list-valued parameters in IN clause"
   - do:
       esql.query:
@@ -963,7 +967,11 @@ version is not allowed:
 "Test NOT IN with empty list parameter returns all rows":
   - requires:
       test_runner_features: [ capabilities ]
-      capabilities: [ in_list_query_params ]
+      capabilities:
+        - method: POST
+          path: /_query
+          parameters: [ capabilities ]
+          capabilities: [ in_list_query_params ]
       reason: "list-valued parameters in IN clause"
   - do:
       esql.query:
