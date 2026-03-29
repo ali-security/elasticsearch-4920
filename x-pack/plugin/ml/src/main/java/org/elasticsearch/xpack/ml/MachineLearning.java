@@ -877,6 +877,7 @@ public class MachineLearning extends Plugin
             NIGHTLY_MAINTENANCE_REQUESTS_PER_SECOND,
             RESULTS_INDEX_ROLLOVER_MAX_SIZE,
             MachineLearningField.USE_AUTO_MACHINE_MEMORY_PERCENT,
+            MachineLearningField.MODEL_GRAPH_VALIDATION_ENABLED,
             MAX_ML_NODE_SIZE,
             DELAYED_DATA_CHECK_FREQ,
             JOB_OPEN_RETRY_TIMEOUT,
