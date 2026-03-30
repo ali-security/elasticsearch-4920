@@ -895,7 +895,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where color IN (?colors) | stats c = count() by color | sort color'
+          query: 'from test | where color IN (?colors) | stats c = count() by color | sort color | limit 1000'
           params: [{"colors": ["green", "blue"]}]
 
   - length: { columns: 2 }
@@ -916,7 +916,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where color IN (?colors) | stats c = count()'
+          query: 'from test | where color IN (?colors) | stats c = count() | limit 1000'
           params: [{"colors": ["blue"]}]
 
   - length: { columns: 1 }
@@ -936,7 +936,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where color NOT IN (?colors) | stats c = count()'
+          query: 'from test | where color NOT IN (?colors) | stats c = count() | limit 1000'
           params: [{"colors": ["green", "blue"]}]
 
   - length: { columns: 1 }
@@ -956,7 +956,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where color IN (?colors) | stats c = count()'
+          query: 'from test | where color IN (?colors) | stats c = count() | limit 1000'
           params: [{"colors": []}]
 
   - length: { columns: 1 }
@@ -976,7 +976,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where color NOT IN (?colors) | stats c = count()'
+          query: 'from test | where color NOT IN (?colors) | stats c = count() | limit 1000'
           params: [{"colors": []}]
 
   - length: { columns: 1 }
@@ -996,7 +996,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where ?colors IS NULL OR color IN (?colors) | stats c = count()'
+          query: 'from test | where ?colors IS NULL OR color IN (?colors) | stats c = count() | limit 1000'
           params: [{"colors": null}]
 
   - length: { columns: 1 }
@@ -1016,7 +1016,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where ?colors IS NULL OR color IN (?colors) | stats c = count()'
+          query: 'from test | where ?colors IS NULL OR color IN (?colors) | stats c = count() | limit 1000'
           params: [{"colors": ["blue"]}]
 
   - length: { columns: 1 }
@@ -1036,7 +1036,7 @@ version is not allowed:
   - do:
       esql.query:
         body:
-          query: 'from test | where data IN (?vals) | stats c = count()'
+          query: 'from test | where data IN (?vals) | stats c = count() | limit 1000'
           params: [{"vals": [1]}]
 
   - length: { columns: 1 }
