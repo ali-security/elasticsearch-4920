@@ -59,6 +59,7 @@ libs/plugin-analysis-api @elastic/es-core-infra
 libs/plugin-api @elastic/es-core-infra
 libs/plugin-classloader @elastic/es-core-infra
 libs/plugin-scanner @elastic/es-core-infra
+libs/x-content @elastic/es-core-infra
 modules/lang-expression @elastic/es-core-infra
 modules/lang-mustache @elastic/es-core-infra
 modules/lang-painless @elastic/es-core-infra
