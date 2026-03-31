@@ -39,6 +39,9 @@ public final class IndexInputUtils {
 
     private IndexInputUtils() {}
 
+    /**
+     * Returns {@code true} if {@code MemorySegment} slices can be obtained from the specified {@link IndexInput}.
+     */
     public static boolean canUseSegmentSlices(IndexInput input) {
         return input instanceof MemorySegmentAccessInput || input instanceof DirectAccessInput;
     }
