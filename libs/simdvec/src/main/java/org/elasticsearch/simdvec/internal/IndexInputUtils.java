@@ -39,6 +39,10 @@ public final class IndexInputUtils {
 
     private IndexInputUtils() {}
 
+    public static boolean canUseSegmentSlices(IndexInput input) {
+        return input instanceof MemorySegmentAccessInput || input instanceof DirectAccessInput;
+    }
+
     /**
      * Obtains a memory segment for the next {@code length} bytes of the
      * index input, passes it to {@code action}, and returns the result.
