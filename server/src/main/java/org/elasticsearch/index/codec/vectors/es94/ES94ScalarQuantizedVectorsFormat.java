@@ -24,7 +24,7 @@ import org.apache.lucene.util.hnsw.RandomVectorScorer;
 import org.apache.lucene.util.hnsw.RandomVectorScorerSupplier;
 import org.apache.lucene.util.quantization.QuantizedByteVectorValues;
 import org.elasticsearch.index.codec.vectors.OptimizedScalarQuantizer;
-import org.elasticsearch.index.codec.vectors.es93.ES93FlatVectorScorer;
+import org.elasticsearch.index.codec.vectors.es93.ES93GenericFlatVectorScorer;
 import org.elasticsearch.index.codec.vectors.es93.ES93GenericFlatVectorsFormat;
 import org.elasticsearch.index.mapper.vectors.DenseVectorFieldMapper;
 import org.elasticsearch.simdvec.VectorScorerFactory;
@@ -38,7 +38,9 @@ public class ES94ScalarQuantizedVectorsFormat extends FlatVectorsFormat {
     static final String NAME = "ES94ScalarQuantizedVectorsFormat";
     private static final int ALLOWED_BITS = (1 << 7) | (1 << 4) | (1 << 2) | (1 << 1);
 
-    static final Lucene104ScalarQuantizedVectorScorer flatVectorScorer = new ESQuantizedFlatVectorsScorer(ES93FlatVectorScorer.INSTANCE);
+    static final Lucene104ScalarQuantizedVectorScorer flatVectorScorer = new ESQuantizedFlatVectorsScorer(
+        ES93GenericFlatVectorScorer.INSTANCE
+    );
     private final FlatVectorsFormat rawVectorFormat;
     private final QuantizedByteVectorValues.ScalarEncoding encoding;
 

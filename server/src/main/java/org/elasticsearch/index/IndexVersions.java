@@ -25,6 +25,14 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.IntFunction;
 
+/// Records all current and historical [IndexVersion]s
+///
+/// The list serves as the single source of truth for version-to-Lucene mappings, minimum compatibility windows
+/// (`MINIMUM_COMPATIBLE`, `MINIMUM_READONLY_COMPATIBLE`), and build-time merge-conflict detection
+/// (duplicate ids are [rejected at class-initialisation time][#def(int, Version)]).
+///
+/// @see IndexVersion
+///
 @SuppressWarnings("deprecation")
 public class IndexVersions {
 
@@ -235,6 +243,7 @@ public class IndexVersions {
     public static final IndexVersion STORE_IGNORED_WILDCARD_FIELDS_IN_BINARY_DOC_VALUES = def(9_082_0_00, Version.LUCENE_10_4_0);
     public static final IndexVersion WRITE_TSID_PREFIX_PARTITION = def(9_083_0_00, Version.LUCENE_10_4_0);
     public static final IndexVersion SEMANTIC_TEXT_DEFAULTS_TO_JINA_V5 = def(9_084_0_00, Version.LUCENE_10_4_0);
+    public static final IndexVersion TIME_SERIES_DISABLE_SEQUENCE_NUMBERS = def(9_085_0_00, Version.LUCENE_10_4_0);
     public static final IndexVersion UPGRADE_TO_LUCENE_10_5_0 = def(9_200_00_0, Version.LUCENE_10_5_0);
     /*
      * STOP! READ THIS FIRST! No, really,
