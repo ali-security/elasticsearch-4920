@@ -40,7 +40,11 @@ public abstract sealed class Int7SQVectorScorer extends RandomVectorScorer.Abstr
     byte[] scratch;
 
     /** Return an optional whose value, if present, is the scorer. Otherwise, an empty optional is returned. */
-    public static Optional<RandomVectorScorer> create(VectorSimilarityFunction sim, LegacyQuantizedByteVectorValues values, float[] queryVector) {
+    public static Optional<RandomVectorScorer> create(
+        VectorSimilarityFunction sim,
+        LegacyQuantizedByteVectorValues values,
+        float[] queryVector
+    ) {
         if (SUPPORTS_HEAP_SEGMENTS == false) {
             return Optional.empty();
         }
