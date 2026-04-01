@@ -163,8 +163,10 @@ public class CrossProjectIndexResolutionValidator {
                             }
                             remoteAuthorizationExceptions.putIfAbsent(projectAlias, securityException);
                             remoteUnauthorizedIndices.computeIfAbsent(projectAlias, k -> new ArrayList<>()).add(remoteExpression);
+                        } else if (remoteException instanceof IndexNotFoundException indexNotFoundException) {
+                            if (notFoundException == null) notFoundException = indexNotFoundException;
                         } else {
-                            if (notFoundException == null) notFoundException = (IndexNotFoundException) remoteException;
+                            return remoteException;
                         }
                     }
                 }
@@ -203,6 +205,10 @@ public class CrossProjectIndexResolutionValidator {
                         // found flat expression somewhere
                         foundFlat = true;
                         break;
+                    }
+                    if (false == remoteException instanceof IndexNotFoundException
+                        && false == remoteException instanceof ElasticsearchSecurityException) {
+                        return remoteException;
                     }
                     if (currentExpressionSecurityException == null
                         && remoteException instanceof ElasticsearchSecurityException securityException) {
@@ -332,6 +338,10 @@ public class CrossProjectIndexResolutionValidator {
         if (resolvedExpressionsInProject == null) {
             // if we're missing results from the remote because of a connection error, report it; else assume we have an exclusion
             if (remoteExceptions.containsKey(projectAlias)) {
+                Exception remoteEx = remoteExceptions.get(projectAlias);
+                if (remoteEx instanceof ElasticsearchException elasticsearchException) {
+                    return elasticsearchException;
+                }
                 return new IndexNotFoundException(remoteExpression);
             } else {
                 assert localExpressions.expressions()
