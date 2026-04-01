@@ -9,26 +9,21 @@
 
 package org.elasticsearch.repositories.azure;
 
-import com.azure.core.http.HttpHeaderName;
-import com.azure.core.http.HttpRequest;
-import com.azure.core.util.polling.LongRunningOperationStatus;
-import com.azure.core.util.polling.PollResponse;
-import com.azure.storage.blob.models.BlobCopyInfo;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
-
-import org.elasticsearch.core.TimeValue;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import com.azure.core.http.HttpHeaderName;
 import com.azure.core.http.HttpMethod;
+import com.azure.core.http.HttpRequest;
 import com.azure.core.util.BinaryData;
 import com.azure.core.util.FluxUtil;
 import com.azure.core.util.logging.ClientLogger;
+import com.azure.core.util.polling.LongRunningOperationStatus;
+import com.azure.core.util.polling.PollResponse;
 import com.azure.storage.blob.BlobAsyncClient;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerAsyncClient;
@@ -39,6 +34,7 @@ import com.azure.storage.blob.batch.BlobBatch;
 import com.azure.storage.blob.batch.BlobBatchAsyncClient;
 import com.azure.storage.blob.batch.BlobBatchClientBuilder;
 import com.azure.storage.blob.batch.BlobBatchStorageException;
+import com.azure.storage.blob.models.BlobCopyInfo;
 import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobItemProperties;
@@ -78,6 +74,7 @@ import org.elasticsearch.core.Assertions;
 import org.elasticsearch.core.CheckedConsumer;
 import org.elasticsearch.core.IOUtils;
 import org.elasticsearch.core.Nullable;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.core.Tuple;
 import org.elasticsearch.repositories.RepositoriesMetrics;
 import org.elasticsearch.repositories.azure.AzureRepository.Repository;
@@ -721,12 +718,8 @@ public class AzureBlobStore implements BlobStore {
         blockBlobAsyncClient.commitBlockList(blockIds, failIfAlreadyExists == false).block();
     }
 
-    public void copyBlob(
-        OperationPurpose purpose,
-        String sourceBlobName,
-        AzureBlobStore sourceBlobStore,
-        String blobName
-    ) throws IOException {
+    public void copyBlob(OperationPurpose purpose, String sourceBlobName, AzureBlobStore sourceBlobStore, String blobName)
+        throws IOException {
         final BlobServiceAsyncClient sourceAsyncClient = sourceBlobStore.asyncClient(purpose);
         final BlobAsyncClient sourceBlobAsyncClient = sourceAsyncClient.getBlobContainerAsyncClient(sourceBlobStore.container)
             .getBlobAsyncClient(sourceBlobName);
@@ -742,7 +735,7 @@ public class AzureBlobStore implements BlobStore {
                 throw new IOException("Copy from " + sourceBlobName + " to " + blobName + " failed: " + response.getStatus());
             }
         } catch (BlobStorageException e) {
-            if (e.getStatusCode() == RestStatus.NOT_FOUND.getStatus() &&  BlobErrorCode.BLOB_NOT_FOUND.equals(e.getErrorCode())) {
+            if (e.getStatusCode() == RestStatus.NOT_FOUND.getStatus() && BlobErrorCode.BLOB_NOT_FOUND.equals(e.getErrorCode())) {
                 throw new NoSuchFileException("Copy source [" + sourceBlobName + "] not found: " + e.getMessage());
             }
             throw new IOException("Unable to copy object [" + blobName + "] from [" + sourceBlobName + "]", e);

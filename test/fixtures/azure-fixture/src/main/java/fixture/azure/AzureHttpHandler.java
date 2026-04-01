@@ -223,14 +223,7 @@ public class AzureHttpHandler implements HttpHandler {
                     exchange.sendResponseHeaders(RestStatus.ACCEPTED.getStatus(), -1);
                 } else {
                     String blobType = requireHeader(exchange, X_MS_BLOB_TYPE);
-                    mockAzureBlobStore.putBlob(
-                        blobPath(exchange),
-                        contents,
-                        blobType,
-                        ifNoneMatch,
-                        leaseId(exchange),
-                        null
-                    );
+                    mockAzureBlobStore.putBlob(blobPath(exchange), contents, blobType, ifNoneMatch, leaseId(exchange), null);
                     exchange.getResponseHeaders().add("x-ms-request-server-encrypted", "false");
                     exchange.sendResponseHeaders(RestStatus.CREATED.getStatus(), -1);
                 }
