@@ -21,7 +21,6 @@ import reactor.core.scheduler.Schedulers;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
 
-import com.azure.core.http.HttpMethod;
 import com.azure.core.http.HttpPipelineCallContext;
 import com.azure.core.http.HttpPipelineNextPolicy;
 import com.azure.core.http.HttpPipelinePosition;
@@ -49,7 +48,6 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.netty4.NettyAllocator;
 
-import java.net.URL;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -406,10 +404,9 @@ class AzureClientProvider extends AbstractLifecycleComponent {
         }
 
         private void trackCompletedRequest(HttpRequest httpRequest, RequestMetrics requestMetrics) {
-            HttpMethod method = httpRequest.getHttpMethod();
-            if (method != null) {
+            if (httpRequest.getHttpMethod() != null) {
                 try {
-                    requestMetricsHandler.requestCompleted(purpose, method, httpRequest.getUrl(), requestMetrics);
+                    requestMetricsHandler.requestCompleted(purpose, httpRequest, requestMetrics);
                 } catch (Exception e) {
                     logger.warn("Unable to notify a successful request", e);
                 }
@@ -431,6 +428,6 @@ class AzureClientProvider extends AbstractLifecycleComponent {
      */
     interface RequestMetricsHandler {
 
-        void requestCompleted(OperationPurpose purpose, HttpMethod method, URL url, RequestMetrics metrics);
+        void requestCompleted(OperationPurpose purpose, HttpRequest request, RequestMetrics metrics);
     }
 }
