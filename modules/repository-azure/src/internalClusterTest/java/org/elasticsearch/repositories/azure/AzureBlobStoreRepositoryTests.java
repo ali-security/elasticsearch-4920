@@ -521,6 +521,7 @@ public class AzureBlobStoreRepositoryTests extends ESMockAPIBasedRepositoryInteg
     private Map<AzureBlobStore.Operation, Long> getServerMetrics() {
         return getMockRequestCounts().entrySet()
             .stream()
+            .filter(e -> e.getValue() > 0)
             .collect(Collectors.toMap(e -> AzureBlobStore.Operation.fromKey(e.getKey()), Map.Entry::getValue));
     }
 }
