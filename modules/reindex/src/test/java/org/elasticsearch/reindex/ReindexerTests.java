@@ -437,6 +437,32 @@ public class ReindexerTests extends ESTestCase {
     }
 
     /**
+     * When shutdown requested relocation but the task completes in place (empty resume info), the PIT must still close.
+     * Matches {@code shouldNotClosePitOnResponse}: only slice workers skip close on response, not {@code isRelocationRequested}.
+     */
+    public void testWrapListenerWithClosePitClosesOnNormalCompletionWhileRelocationRequested() {
+        final AtomicInteger closeCount = new AtomicInteger(0);
+        final ActionListener<BulkByScrollResponse> delegate = spy(ActionListener.noop());
+        final BytesReference pitId = new BytesArray("pit-id");
+        final BulkByScrollTask task = createTaskWithParentIdAndRelocationEnabled(TaskId.EMPTY_TASK_ID);
+        task.setWorker(Float.POSITIVE_INFINITY, 0);
+        task.requestRelocation();
+
+        final ActionListener<BulkByScrollResponse> wrapped = Reindexer.wrapListenerWithClosePit(
+            pitId,
+            delegate,
+            id -> closeCount.incrementAndGet(),
+            task,
+            () -> false
+        );
+
+        wrapped.onResponse(reindexResponseWithBulkAndSearchFailures(null, null));
+
+        verify(delegate).onResponse(any());
+        assertThat(closeCount.get(), equalTo(1));
+    }
+
+    /**
      * When the response has a pitId, wrapListenerWithClosePit must close using the response's pitId (latest).
      */
     public void testWrapListenerWithClosePitUsesResponsePitIdWhenPresent() {

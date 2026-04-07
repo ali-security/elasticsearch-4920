@@ -72,6 +72,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testLocalResumeReindexFromScroll() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         String sourceIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         String destIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         int totalDocs = randomIntBetween(20, 100);
@@ -119,6 +120,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testRemoteResumeReindexFromScroll() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         String sourceIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         String destIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         int totalDocs = randomIntBetween(20, 100);
@@ -183,6 +185,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testLocalResumeReindexFromScroll_slicedN() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         String sourceIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         String destIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         final int totalDocs = randomIntBetween(200, 300);
@@ -239,6 +242,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testLocalResumeReindexFromScroll_slicedN_partialCompleted() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         String sourceIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         String destIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         final int totalDocs = randomIntBetween(200, 300);
@@ -309,6 +313,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testLocalResumeReindexFromScroll_slicedAuto() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         String sourceIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         String destIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         final int totalDocs = randomIntBetween(200, 300);
@@ -375,6 +380,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testLocalResumeReindexFromScroll_slicedManual() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         String sourceIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         String destIndex = randomAlphanumericOfLength(10).toLowerCase(Locale.ROOT);
         final int totalDocs = randomIntBetween(200, 300);
@@ -439,6 +445,7 @@ public class ReindexResumeIT extends ESIntegTestCase {
     }
 
     public void testResumeReindexMetricsRecordsDurationFromRelocationOrigin() {
+        assumeFalse("reindex with point-in-time search must not be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
         assertThat(internalCluster().numDataNodes(), equalTo(1));
         final String dataNodeName = internalCluster().getRandomDataNodeName();
         final TestTelemetryPlugin telemetryPlugin = internalCluster().getInstance(PluginsService.class, dataNodeName)
