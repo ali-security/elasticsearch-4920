@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThan;
 
 /**
  * Tests the tsid-contiguous emit with inline null-fill produced by
@@ -45,6 +46,12 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
     record InputRow(String tsid, long timestamp, long value) {}
 
     record Row(String tsid, long timestamp, Long sum) {}
+
+    /**
+     * A collapsed row: one MV entry per series with parallel step and sum lists.
+     * Null sum entries mean the step had no data (null-fill).
+     */
+    record MvRow(String tsid, List<Long> steps, List<Long> sums) {}
 
     // ---- tests ----
 
@@ -114,6 +121,117 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
         assertThat(output.get(0), equalTo(new Row("tsid1", step(0), 10L)));
         assertThat(output.get(1), equalTo(new Row("tsid1", step(1), 20L)));
         assertThat(output.get(2), equalTo(new Row("tsid1", step(2), 30L)));
+    }
+
+    /** MV steps in collapsed output must be ascending (input is descending, as Lucene reads time-series data). */
+    public void testCollapsedMvStepsAreAscending() {
+        List<InputRow> input = List.of(
+            new InputRow("tsid1", step(4), 50),
+            new InputRow("tsid1", step(3), 40),
+            new InputRow("tsid1", step(2), 30),
+            new InputRow("tsid1", step(1), 20),
+            new InputRow("tsid1", step(0), 10)
+        );
+
+        List<MvRow> output = runCollapsedWithCollapse(input);
+
+        assertThat(output.size(), equalTo(1));
+        MvRow row = output.get(0);
+        assertThat(row.tsid(), equalTo("tsid1"));
+        assertThat(row.steps(), equalTo(List.of(step(0), step(1), step(2), step(3), step(4))));
+        assertThat(row.sums(), equalTo(List.of(10L, 20L, 30L, 40L, 50L)));
+    }
+
+    /** Same as above with two tsids: verify MV step ordering for each series independently. */
+    public void testCollapsedMvStepsAreAscendingMultipleTsids() {
+        List<InputRow> input = List.of(
+            new InputRow("tsid1", step(2), 30),
+            new InputRow("tsid1", step(1), 20),
+            new InputRow("tsid1", step(0), 10),
+            new InputRow("tsid2", step(2), 300),
+            new InputRow("tsid2", step(1), 200),
+            new InputRow("tsid2", step(0), 100)
+        );
+
+        List<MvRow> output = runCollapsedWithCollapse(input);
+
+        assertThat(output.size(), equalTo(2));
+        assertThat(output.get(0).tsid(), equalTo("tsid1"));
+        assertThat(output.get(0).steps(), equalTo(List.of(step(0), step(1), step(2))));
+        assertThat(output.get(0).sums(), equalTo(List.of(10L, 20L, 30L)));
+        assertThat(output.get(1).tsid(), equalTo("tsid2"));
+        assertThat(output.get(1).steps(), equalTo(List.of(step(0), step(1), step(2))));
+        assertThat(output.get(1).sums(), equalTo(List.of(100L, 200L, 300L)));
+    }
+
+    /**
+     * Simulates the INITIAL->FINAL split: INITIAL on data node emits standard intermediate rows,
+     * FINAL on coordinator uses emitCollapsed with null-fill for ascending chronological output,
+     * then TimeSeriesCollapseOperator stream-collapses into MV rows.
+     */
+    public void testInitialFinalCollapsedMvStepsAreAscending() {
+        BlockFactory blockFactory = blockFactory();
+        DriverContext driverContext = new DriverContext(blockFactory.bigArrays(), blockFactory, null, "test");
+
+        // --- INITIAL phase: standard emit, no collapsed behavior ---
+        TimeSeriesAggregationOperator initialOp = createOperator(
+            AggregatorMode.INITIAL,
+            List.of(
+                new SumLongAggregatorFunctionSupplier(TestWarningsSource.INSTANCE).groupingAggregatorFactory(
+                    AggregatorMode.INITIAL,
+                    List.of(2)
+                )
+            ),
+            blockFactory,
+            driverContext
+        );
+        feedInput(
+            initialOp,
+            blockFactory,
+            List.of(
+                new InputRow("tsid1", step(2), 30),
+                new InputRow("tsid1", step(1), 20),
+                new InputRow("tsid1", step(0), 10),
+                new InputRow("tsid2", step(2), 300),
+                new InputRow("tsid2", step(1), 200),
+                new InputRow("tsid2", step(0), 100)
+            )
+        );
+        initialOp.finish();
+
+        List<Page> intermediatePages = new ArrayList<>();
+        Page page;
+        while ((page = initialOp.getOutput()) != null) {
+            intermediatePages.add(page);
+        }
+        initialOp.close();
+
+        // --- FINAL phase: emitCollapsed activates, null-fill, ascending order ---
+        // SumLong intermediate state has 3 blocks (sum, seen, failed), so FINAL reads from channels [2, 3, 4]
+        TimeSeriesAggregationOperator finalOp = createOperator(
+            AggregatorMode.FINAL,
+            List.of(
+                new SumLongAggregatorFunctionSupplier(TestWarningsSource.INSTANCE).groupingAggregatorFactory(
+                    AggregatorMode.FINAL,
+                    List.of(2, 3, 4)
+                )
+            ),
+            blockFactory,
+            driverContext
+        );
+        for (Page intermediatePage : intermediatePages) {
+            finalOp.addInput(intermediatePage);
+        }
+        finalOp.finish();
+
+        // --- Collapse phase ---
+        List<MvRow> result = collapseAndDrain(finalOp, driverContext);
+
+        assertThat(result.size(), equalTo(2));
+        for (MvRow row : result) {
+            assertThat(row.steps().size(), equalTo(3));
+            assertStepsAscending(row);
+        }
     }
 
     /**
@@ -269,6 +387,43 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
         return result;
     }
 
+    /**
+     * Pipe the agg operator's output through {@link TimeSeriesCollapseOperator} and return the collapsed MV rows.
+     * Layout: keyChannels=[0] (tsid), collapseChannels=[1,2] (step, sum), timestampChannel=1 (step).
+     */
+    private List<MvRow> collapseAndDrain(TimeSeriesAggregationOperator aggOp, DriverContext driverContext) {
+        TimeSeriesCollapseOperator collapseOp = new TimeSeriesCollapseOperator(new int[] { 0 }, new int[] { 1, 2 }, 1, driverContext);
+        Page page;
+        while ((page = aggOp.getOutput()) != null) {
+            collapseOp.addInput(page);
+        }
+        aggOp.close();
+        collapseOp.finish();
+
+        List<MvRow> result = new ArrayList<>();
+        while ((page = collapseOp.getOutput()) != null) {
+            BytesRefBlock tsids = page.getBlock(0);
+            LongBlock steps = page.getBlock(1);
+            LongBlock sums = page.getBlock(2);
+            BytesRef scratch = new BytesRef();
+            for (int p = 0; p < page.getPositionCount(); p++) {
+                String tsid = tsids.getBytesRef(tsids.getFirstValueIndex(p), scratch).utf8ToString();
+                List<Long> stepList = new ArrayList<>();
+                List<Long> sumList = new ArrayList<>();
+                for (int v = 0; v < steps.getValueCount(p); v++) {
+                    stepList.add(steps.getLong(steps.getFirstValueIndex(p) + v));
+                }
+                for (int v = 0; v < sums.getValueCount(p); v++) {
+                    sumList.add(sums.getLong(sums.getFirstValueIndex(p) + v));
+                }
+                result.add(new MvRow(tsid, stepList, sumList));
+            }
+            page.releaseBlocks();
+        }
+        collapseOp.close();
+        return result;
+    }
+
     /** Run a collapsed operator against the given input rows and return all expanded output rows. */
     private List<Row> runCollapsed(List<InputRow> inputRows) {
         BlockFactory blockFactory = blockFactory();
@@ -277,5 +432,28 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
         feedInput(op, blockFactory, inputRows);
         op.finish();
         return drainExpandedRows(op);
+    }
+
+    /**
+     * Run the full SINGLE-mode collapse pipeline:
+     * {@link TimeSeriesAggregationOperator} (collapsed=true) {@literal ->} {@link TimeSeriesCollapseOperator}.
+     */
+    private List<MvRow> runCollapsedWithCollapse(List<InputRow> inputRows) {
+        BlockFactory blockFactory = blockFactory();
+        DriverContext driverContext = new DriverContext(blockFactory.bigArrays(), blockFactory, null, "test");
+        TimeSeriesAggregationOperator aggOp = createSingleModeOperator(blockFactory, driverContext);
+        feedInput(aggOp, blockFactory, inputRows);
+        aggOp.finish();
+        return collapseAndDrain(aggOp, driverContext);
+    }
+
+    private static void assertStepsAscending(MvRow row) {
+        for (int i = 0; i < row.steps().size() - 1; i++) {
+            assertThat(
+                row.tsid() + " step[" + i + "] must be < step[" + (i + 1) + "]",
+                row.steps().get(i),
+                lessThan(row.steps().get(i + 1))
+            );
+        }
     }
 }
