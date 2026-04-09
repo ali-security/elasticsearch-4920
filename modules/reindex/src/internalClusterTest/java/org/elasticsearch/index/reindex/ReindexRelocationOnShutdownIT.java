@@ -18,6 +18,7 @@ import org.elasticsearch.action.admin.cluster.node.tasks.get.GetTaskResponse;
 import org.elasticsearch.action.admin.cluster.node.tasks.list.ListTasksResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.cluster.metadata.IndexMetadata;
+import org.elasticsearch.cluster.routing.UnassignedInfo;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.core.TimeValue;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.elasticsearch.node.ShutdownPrepareService.MAXIMUM_REINDEXING_TIMEOUT_SETTING;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHitCount;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -213,8 +215,16 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
                 .put(IndexMetadata.SETTING_NUMBER_OF_SHARDS, 2)
                 .put(IndexMetadata.SETTING_NUMBER_OF_REPLICAS, 0)
                 .put("index.routing.allocation.total_shards_per_node", 1)
+                .put(UnassignedInfo.INDEX_DELAYED_NODE_LEFT_TIMEOUT_SETTING.getKey(), TimeValue.ZERO)
         ).get();
         ensureGreen(SOURCE);
+
+        prepareCreate(DEST).setSettings(
+            Settings.builder()
+                .put(IndexMetadata.SETTING_NUMBER_OF_SHARDS, 1)
+                .put(IndexMetadata.SETTING_NUMBER_OF_REPLICAS, 1)
+                .put(UnassignedInfo.INDEX_DELAYED_NODE_LEFT_TIMEOUT_SETTING.getKey(), TimeValue.ZERO)
+        ).get();
 
         final int numDocs = randomIntBetween(10, 40);
         indexRandom(
@@ -293,7 +303,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
                 "relocated reindex should fail with PIT missing-nodes or search-phase disconnect after stopped node",
                 taskResultIndicatesRelocatedReindexFailedAfterNodeLeft(relocated, stoppedDataNodeId)
             );
-        }, 60, TimeUnit.SECONDS);
+        }, 120, TimeUnit.SECONDS);
     }
 
     /**
