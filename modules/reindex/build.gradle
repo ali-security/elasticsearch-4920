@@ -44,7 +44,7 @@ dependencies {
   testImplementation project(':modules:rest-root')
   // for data stream integration tests
   internalClusterTestImplementation project(':modules:data-streams')
-  // registers reindex_pit_search node feature (ReindexManagementFeatures) on test nodes; mirrors reindex-management ITs
+  // registers reindex relocation and pit search node features
   internalClusterTestImplementation project(':modules:reindex-management')
 
   clusterModules project(':modules:lang-painless')
