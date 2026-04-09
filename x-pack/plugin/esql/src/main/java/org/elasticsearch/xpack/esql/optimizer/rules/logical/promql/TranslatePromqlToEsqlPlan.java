@@ -54,6 +54,7 @@ import org.elasticsearch.xpack.esql.plan.logical.Filter;
 import org.elasticsearch.xpack.esql.plan.logical.LogicalPlan;
 import org.elasticsearch.xpack.esql.plan.logical.Project;
 import org.elasticsearch.xpack.esql.plan.logical.TimeSeriesAggregate;
+import org.elasticsearch.xpack.esql.plan.logical.TimeSeriesCollapse;
 import org.elasticsearch.xpack.esql.plan.logical.UnaryPlan;
 import org.elasticsearch.xpack.esql.plan.logical.promql.AcrossSeriesAggregate;
 import org.elasticsearch.xpack.esql.plan.logical.promql.PromqlCommand;
@@ -79,6 +80,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.elasticsearch.xpack.esql.core.expression.MetadataAttribute.isTimeSeriesAttributeName;
 import static org.elasticsearch.xpack.esql.expression.function.aggregate.AggregateFunction.withFilter;
@@ -214,6 +216,16 @@ public final class TranslatePromqlToEsqlPlan extends OptimizerRules.Parameterize
         plan = applyProjection(promqlCommand, plan);
 
         plan = applyNullOutputFilter(promqlCommand, plan);
+
+        if (promqlCommand.isCollapsed()) {
+            String stepName = promqlCommand.stepColumnName();
+            String valueName = promqlCommand.valueColumnName();
+            List<Attribute> collapseAttributes = plan.output()
+                .stream()
+                .filter(a -> a.name().equals(stepName) || a.name().equals(valueName))
+                .collect(Collectors.toList());
+            plan = new TimeSeriesCollapse(promqlCommand.source(), plan, collapseAttributes);
+        }
 
         return plan;
     }

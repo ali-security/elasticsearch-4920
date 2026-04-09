@@ -59,6 +59,7 @@ import org.elasticsearch.compute.operator.SourceOperator;
 import org.elasticsearch.compute.operator.SourceOperator.SourceOperatorFactory;
 import org.elasticsearch.compute.operator.SparklineGenerateEmptyBucketsOperator;
 import org.elasticsearch.compute.operator.StringExtractOperator;
+import org.elasticsearch.compute.operator.TimeSeriesCollapseOperator;
 import org.elasticsearch.compute.operator.TsInfoOperator;
 import org.elasticsearch.compute.operator.exchange.ExchangeSink;
 import org.elasticsearch.compute.operator.exchange.ExchangeSinkOperator.ExchangeSinkOperatorFactory;
@@ -165,6 +166,7 @@ import org.elasticsearch.xpack.esql.plan.physical.SampleExec;
 import org.elasticsearch.xpack.esql.plan.physical.ShowExec;
 import org.elasticsearch.xpack.esql.plan.physical.SparklineGenerateEmptyBucketsExec;
 import org.elasticsearch.xpack.esql.plan.physical.TimeSeriesAggregateExec;
+import org.elasticsearch.xpack.esql.plan.physical.TimeSeriesCollapseExec;
 import org.elasticsearch.xpack.esql.plan.physical.TopNByExec;
 import org.elasticsearch.xpack.esql.plan.physical.TopNExec;
 import org.elasticsearch.xpack.esql.plan.physical.TsInfoExec;
@@ -333,6 +335,8 @@ public class LocalExecutionPlanner {
             return planLimit(limit, context);
         } else if (node instanceof MvExpandExec mvExpand) {
             return planMvExpand(mvExpand, context);
+        } else if (node instanceof TimeSeriesCollapseExec tsCollapse) {
+            return planTimeSeriesCollapse(tsCollapse, context);
         } else if (node instanceof RerankExec rerank) {
             return planRerank(rerank, context);
         } else if (node instanceof ChangePointExec changePoint) {
@@ -1541,6 +1545,30 @@ public class LocalExecutionPlanner {
             new MvExpandOperator.Factory(source.layout.get(mvExpandExec.target().id()).channel(), blockSize),
             layout.build()
         );
+    }
+
+    private PhysicalOperation planTimeSeriesCollapse(TimeSeriesCollapseExec collapse, LocalExecutionPlannerContext context) {
+        PhysicalOperation source = plan(collapse.child(), context);
+        Layout layout = source.layout;
+
+        Set<NameId> collapseIds = collapse.collapseAttributes().stream().map(Attribute::id).collect(java.util.stream.Collectors.toSet());
+
+        int[] collapseChannels = collapse.collapseAttributes().stream().mapToInt(a -> layout.get(a.id()).channel()).toArray();
+
+        int[] keyChannels = collapse.output()
+            .stream()
+            .filter(a -> collapseIds.contains(a.id()) == false)
+            .mapToInt(a -> layout.get(a.id()).channel())
+            .toArray();
+
+        int timestampChannel = collapse.collapseAttributes()
+            .stream()
+            .filter(a -> a.dataType() == DataType.DATETIME)
+            .mapToInt(a -> layout.get(a.id()).channel())
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("TimeSeriesCollapseExec has no DATETIME collapse attribute"));
+
+        return source.with(new TimeSeriesCollapseOperator.Factory(keyChannels, collapseChannels, timestampChannel), layout);
     }
 
     private PhysicalOperation planChangePoint(ChangePointExec changePoint, LocalExecutionPlannerContext context) {
