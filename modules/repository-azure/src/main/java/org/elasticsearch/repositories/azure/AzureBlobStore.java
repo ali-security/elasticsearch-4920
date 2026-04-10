@@ -55,6 +55,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.util.Throwables;
 import org.elasticsearch.cluster.metadata.ProjectId;
 import org.elasticsearch.cluster.metadata.RepositoryMetadata;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.blobstore.BlobContainer;
 import org.elasticsearch.common.blobstore.BlobPath;
@@ -718,13 +719,34 @@ public class AzureBlobStore implements BlobStore {
         blockBlobAsyncClient.commitBlockList(blockIds, failIfAlreadyExists == false).block();
     }
 
+    private AzureStorageSettings getStorageSettings() {
+        return service.getClientsManager().getClientSettings(projectId, clientName);
+    }
+
     public void copyBlob(OperationPurpose purpose, String sourceBlobName, AzureBlobStore sourceBlobStore, String blobName)
         throws IOException {
-        final BlobServiceAsyncClient sourceAsyncClient = sourceBlobStore.asyncClient(purpose);
-        final BlobAsyncClient sourceBlobAsyncClient = sourceAsyncClient.getBlobContainerAsyncClient(sourceBlobStore.container)
-            .getBlobAsyncClient(sourceBlobName);
-        final String sourceUrl = sourceBlobAsyncClient.getBlobUrl();
-
+        final BlobServiceClient sourceSyncClient = sourceBlobStore.client(purpose);
+        final BlobClient sourceBlobSyncClient = sourceSyncClient.getBlobContainerClient(sourceBlobStore.container)
+            .getBlobClient(sourceBlobName);
+        String sourceUrl = sourceBlobSyncClient.getBlobUrl();
+        final AzureStorageSettings sourceStorageSettings = sourceBlobStore.getStorageSettings();
+        String sasToken = sourceStorageSettings.getSasToken();
+        if (Strings.hasText(sasToken)) {
+            sourceUrl += "?" + sasToken;
+        } else {
+            final AzureStorageSettings.StorageEndpoint storageEndpoint = getStorageSettings().getStorageEndpoint();
+            if (sourceStorageSettings.getStorageEndpoint().equals(storageEndpoint) == false) {
+                // learn.microsoft.com/en-us/rest/api/storageservices/copy-blob
+                // As of now we only expect to copy across the same storage account
+                throw new IllegalArgumentException(
+                    "Cannot copy blob ["
+                        + sourceBlobName
+                        + "] to ["
+                        + blobName
+                        + "] across different Azure storage accounts without an SAS token"
+                );
+            }
+        }
         final BlobServiceClient syncClient = client(purpose);
         final BlobClient blobSyncClient = syncClient.getBlobContainerClient(container).getBlobClient(blobName);
         try {
