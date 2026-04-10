@@ -27,7 +27,6 @@ import org.elasticsearch.node.ShutdownPrepareService;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.reindex.ReindexPlugin;
 import org.elasticsearch.reindex.RethrottleRequestBuilder;
-import org.elasticsearch.reindex.TaskRelocatedException;
 import org.elasticsearch.reindex.TransportReindexAction;
 import org.elasticsearch.reindex.management.ReindexManagementPlugin;
 import org.elasticsearch.search.SearchService;
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.elasticsearch.node.ShutdownPrepareService.MAXIMUM_REINDEXING_TIMEOUT_SETTING;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHitCount;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
