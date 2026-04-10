@@ -35,9 +35,7 @@ public class TaskResultsServiceTests extends ESTestCase {
     public void testIsRetryableTaskStoreFailureWithRemoteTransportException() {
         UnavailableShardsException root = new UnavailableShardsException(".tasks", 0, "primary not active");
         assertTrue(
-            TaskResultsService.isRetryableTaskStoreFailure(
-                new RemoteTransportException("remote", new ElasticsearchException("step", root))
-            )
+            TaskResultsService.isRetryableTaskStoreFailure(new RemoteTransportException("remote", new ElasticsearchException("step", root)))
         );
     }
 
