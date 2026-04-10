@@ -11,9 +11,11 @@ package org.elasticsearch.tasks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.UnavailableShardsException;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.internal.Client;
 import org.elasticsearch.client.internal.OriginSettingClient;
@@ -99,7 +101,7 @@ public class TaskResultsService {
 
             @Override
             public void onFailure(Exception e) {
-                if (false == (e instanceof EsRejectedExecutionException) || false == backoff.hasNext()) {
+                if (isRetryableTaskStoreFailure(e) == false || backoff.hasNext() == false) {
                     listener.onFailure(e);
                 } else {
                     TimeValue wait = backoff.next();
@@ -108,6 +110,21 @@ public class TaskResultsService {
                 }
             }
         });
+    }
+
+    /**
+     * Whether persisting a task result to {@link #TASK_INDEX} should be retried with {@link #STORE_BACKOFF_POLICY}.
+     * <ul>
+     *     <li>{@link EsRejectedExecutionException} — coordinating thread pool rejected the write.</li>
+     *     <li>{@link UnavailableShardsException} — {@code .tasks} primary not active yet (system index bootstrapping,
+     *     shard recovery, or delayed allocation after node loss).</li>
+     * </ul>
+     */
+    static boolean isRetryableTaskStoreFailure(Exception e) {
+        if (e instanceof EsRejectedExecutionException) {
+            return true;
+        }
+        return ExceptionsHelper.unwrap(e, UnavailableShardsException.class) != null;
     }
 
     private static Settings getTaskResultIndexSettings() {
