@@ -1517,6 +1517,17 @@ public class LogicalPlanBuilder extends ExpressionBuilder {
         };
     }
 
+    @Override
+    public PlanFactory visitTsCollapseCommand(EsqlBaseParser.TsCollapseCommandContext ctx) {
+        Source source = source(ctx);
+        return input -> {
+            if (input instanceof PromqlCommand pc) {
+                return pc.withCollapsed(true);
+            }
+            throw new ParsingException(source, "TS_COLLAPSE can only appear directly after a PROMQL command");
+        };
+    }
+
     private String getValueColumnName(EsqlBaseParser.ValueNameContext ctx, String promqlQuery) {
         if (ctx == null) {
             return promqlQuery;

@@ -663,6 +663,24 @@ public class PromqlParserTests extends ESTestCase {
         assertThat(e.getMessage(), containsString("Parameter [?idx] for index must be a string"));
     }
 
+    public void testTsCollapseAfterPromql() {
+        PromqlCommand promql = as(TEST_PARSER.parseQuery("PROMQL index=test step=5m (avg(foo)) | TS_COLLAPSE"), PromqlCommand.class);
+        assertThat(promql.isCollapsed(), equalTo(true));
+    }
+
+    public void testTsCollapseNotAfterPromql() {
+        ParsingException e = assertThrows(ParsingException.class, () -> TEST_PARSER.parseQuery("ROW a = 1 | TS_COLLAPSE"));
+        assertThat(e.getMessage(), containsString("TS_COLLAPSE can only appear directly after a PROMQL command"));
+    }
+
+    public void testTsCollapseNotDirectlyAfterPromql() {
+        ParsingException e = assertThrows(
+            ParsingException.class,
+            () -> TEST_PARSER.parseQuery("PROMQL index=test step=5m (avg(foo)) | LIMIT 1 | TS_COLLAPSE")
+        );
+        assertThat(e.getMessage(), containsString("TS_COLLAPSE can only appear directly after a PROMQL command"));
+    }
+
     private static PromqlCommand parse(String query) {
         return as(TEST_PARSER.parseQuery(query), PromqlCommand.class);
     }
