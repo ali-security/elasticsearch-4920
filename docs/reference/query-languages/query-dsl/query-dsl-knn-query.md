@@ -141,6 +141,9 @@ PUT my-image-index
     :   (Optional, object) Build the query vector by generating an embedding from input text. Refer to [Perform semantic search](docs-content://solutions/search/vector/knn.md#knn-semantic-search) to learn more.
         If all queried fields are of type [semantic_text](/reference/elasticsearch/mapping-reference/semantic-text.md), the inference ID associated with the `semantic_text` field may be inferred.
 
+    `embedding` {applies_to}`stack: preview 9.4` {applies_to}`serverless: preview`
+    :   (Optional, object) Build the query vector by generating an embedding from multimodal inputs (such as text and base64-encoded images) using an inference service with the `EMBEDDING` task type. Refer to [Query vector builders](/reference/query-languages/query-dsl/query-vector-builders.md) to learn more.
+
 
 `k`
 :   (Optional, integer) The number of nearest neighbors to return from each shard. {{es}} collects `k` (or `k * oversample` if conditions for [`rescore_vector`](docs-content://solutions/search/vector/knn.md#the-rescore_vector-option) are met) results from each shard, then merges them to find the global top `k` results. This value must be less than or equal to `num_candidates`. Defaults to search request size.

@@ -10,6 +10,9 @@ Vector queries are specialized queries that work on vector fields to efficiently
 [`knn` query](/reference/query-languages/query-dsl/query-dsl-knn-query.md)
 :   A query that finds the *k* nearest vectors to a query vector for [`dense_vector`](/reference/elasticsearch/mapping-reference/dense-vector.md) fields, as measured by a similarity metric.
 
+[Query vector builders](/reference/query-languages/query-dsl/query-vector-builders.md)
+:   Configuration objects that generate a query vector at search time from various inputs, for use with the `knn` query and `knn` retriever. Available builders: `text_embedding`, `embedding`, and `lookup`.
+
 [`sparse_vector` query](/reference/query-languages/query-dsl/query-dsl-sparse-vector-query.md)
 :   A query used to search [`sparse_vector`](/reference/elasticsearch/mapping-reference/sparse-vector.md) field types.
 
@@ -26,6 +29,7 @@ The following queries have been deprecated and will be removed in the near futur
 
 [`weighted_tokens` query](/reference/query-languages/query-dsl/query-dsl-weighted-tokens-query.md)
 :   Allows to perform text expansion queries optimizing for performance.
+
 
 
 
