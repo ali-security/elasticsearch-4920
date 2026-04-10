@@ -21,6 +21,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
 
+import com.azure.core.http.HttpHeaderName;
 import com.azure.core.http.HttpPipelineCallContext;
 import com.azure.core.http.HttpPipelineNextPolicy;
 import com.azure.core.http.HttpPipelinePosition;
@@ -53,6 +54,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 
+import static org.elasticsearch.core.Strings.format;
 import static org.elasticsearch.repositories.azure.AzureRepositoryPlugin.NETTY_EVENT_LOOP_THREAD_POOL_NAME;
 import static org.elasticsearch.repositories.azure.AzureRepositoryPlugin.REPOSITORY_THREAD_POOL_NAME;
 
@@ -349,6 +351,7 @@ class AzureClientProvider extends AbstractLifecycleComponent {
                 return next.process();
             }
             RequestMetrics metrics = (RequestMetrics) metricsData.get();
+            logger.trace("Increasing request count by + 1");
             metrics.requestCount++;
             long requestStartTimeNanos = System.nanoTime();
             return next.process().doOnError(throwable -> {
@@ -364,6 +367,23 @@ class AzureClientProvider extends AbstractLifecycleComponent {
                     if (response.getStatusCode() == RestStatus.TOO_MANY_REQUESTS.getStatus()) {
                         metrics.throttleCount++;
                     }
+                    logger.trace(
+                        () -> format(
+                            "Unsuccessful response [%s]: statusCode=[%s], errorCount=%d, throttleCount=%d",
+                            response.getRequest().getHeaders().get(HttpHeaderName.X_MS_CLIENT_REQUEST_ID),
+                            response.getStatusCode(),
+                            metrics.errorCount,
+                            metrics.throttleCount
+                        )
+                    );
+                } else {
+                    logger.trace(
+                        () -> format(
+                            "Successful response [%s]: statusCode=[%s]",
+                            response.getRequest().getHeaders().get(HttpHeaderName.X_MS_CLIENT_REQUEST_ID),
+                            response.getStatusCode()
+                        )
+                    );
                 }
             });
         }
