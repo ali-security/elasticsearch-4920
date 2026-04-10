@@ -314,6 +314,47 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
         assertThat(result.get(3), equalTo(new DimRow("tsid2", step(1), 200L, "clusterB")));
     }
 
+    /**
+     * Tests that a series spanning multiple input pages is correctly collapsed into a single MV row,
+     * and verifies {@link TimeSeriesCollapseOperator#canProduceMoreDataWithoutExtraInput()}.
+     */
+    public void testSeriesSpansMultiplePages() {
+        BlockFactory blockFactory = blockFactory();
+        DriverContext driverContext = new DriverContext(blockFactory.bigArrays(), blockFactory, null, "test");
+        TimeSeriesCollapseOperator op = new TimeSeriesCollapseOperator(new int[] { 0 }, new int[] { 1, 2 }, 1, driverContext);
+
+        // Page 1: first two steps of tsid1
+        op.addInput(buildCollapsePage(blockFactory, List.of(new InputRow("tsid1", step(0), 10), new InputRow("tsid1", step(1), 20))));
+
+        // tsid1 is still in-flight — nothing in the output queue
+        assertFalse(op.canProduceMoreDataWithoutExtraInput());
+
+        // Page 2: last step of tsid1, then tsid2 (series-key change flushes tsid1)
+        op.addInput(
+            buildCollapsePage(
+                blockFactory,
+                List.of(new InputRow("tsid1", step(2), 30), new InputRow("tsid2", step(0), 100), new InputRow("tsid2", step(1), 200))
+            )
+        );
+
+        // tsid1 completed on series-key change → in output queue
+        assertTrue(op.canProduceMoreDataWithoutExtraInput());
+
+        // finish flushes tsid2
+        op.finish();
+
+        List<MvRow> result = drainMvRows(op);
+        op.close();
+
+        assertThat(result.size(), equalTo(2));
+        assertThat(result.get(0).tsid(), equalTo("tsid1"));
+        assertThat(result.get(0).steps(), equalTo(List.of(step(0), step(1), step(2))));
+        assertThat(result.get(0).sums(), equalTo(List.of(10L, 20L, 30L)));
+        assertThat(result.get(1).tsid(), equalTo("tsid2"));
+        assertThat(result.get(1).steps(), equalTo(List.of(step(0), step(1))));
+        assertThat(result.get(1).sums(), equalTo(List.of(100L, 200L)));
+    }
+
     // ---- helpers ----
 
     private TimeSeriesAggregationOperator createOperator(
@@ -399,8 +440,15 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
         }
         aggOp.close();
         collapseOp.finish();
+        List<MvRow> result = drainMvRows(collapseOp);
+        collapseOp.close();
+        return result;
+    }
 
+    /** Drain all collapsed MV rows from a {@link TimeSeriesCollapseOperator}. Layout: [0]=tsid, [1]=step, [2]=sum. */
+    private List<MvRow> drainMvRows(TimeSeriesCollapseOperator collapseOp) {
         List<MvRow> result = new ArrayList<>();
+        Page page;
         while ((page = collapseOp.getOutput()) != null) {
             BytesRefBlock tsids = page.getBlock(0);
             LongBlock steps = page.getBlock(1);
@@ -420,8 +468,23 @@ public class TimeSeriesCollapsedEmitTests extends ComputeTestCase {
             }
             page.releaseBlocks();
         }
-        collapseOp.close();
         return result;
+    }
+
+    /** Build a page suitable as input for {@link TimeSeriesCollapseOperator} (channels: tsid, step, sum). */
+    private Page buildCollapsePage(BlockFactory blockFactory, List<InputRow> rows) {
+        try (
+            var tsidBuilder = blockFactory.newBytesRefBlockBuilder(rows.size());
+            var stepBuilder = blockFactory.newLongBlockBuilder(rows.size());
+            var sumBuilder = blockFactory.newLongBlockBuilder(rows.size())
+        ) {
+            for (InputRow row : rows) {
+                tsidBuilder.appendBytesRef(new BytesRef(row.tsid()));
+                stepBuilder.appendLong(row.timestamp());
+                sumBuilder.appendLong(row.value());
+            }
+            return new Page(tsidBuilder.build(), stepBuilder.build(), sumBuilder.build());
+        }
     }
 
     /** Run a collapsed operator against the given input rows and return all expanded output rows. */

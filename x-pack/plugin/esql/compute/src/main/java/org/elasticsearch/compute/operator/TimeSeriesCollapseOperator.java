@@ -7,6 +7,9 @@
 
 package org.elasticsearch.compute.operator;
 
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.RamUsageEstimator;
+import org.elasticsearch.common.breaker.CircuitBreaker;
 import org.elasticsearch.compute.data.Block;
 import org.elasticsearch.compute.data.BlockFactory;
 import org.elasticsearch.compute.data.BlockUtils;
@@ -39,6 +42,12 @@ import java.util.Set;
  */
 public class TimeSeriesCollapseOperator implements Operator {
 
+    /**
+     * Estimated heap bytes per value stored in collapse lists:
+     * object reference in ArrayList backing array + boxed primitive overhead.
+     */
+    private static final long BYTES_PER_COLLAPSE_VALUE = RamUsageEstimator.NUM_BYTES_OBJECT_REF + 24;
+
     public record Factory(int[] keyChannels, int[] collapseChannels, int timestampChannel) implements OperatorFactory {
         @Override
         public Operator get(DriverContext driverContext) {
@@ -59,9 +68,11 @@ public class TimeSeriesCollapseOperator implements Operator {
 
     private final int[] keyChannels;
     private final int[] collapseChannels;
+    /** Used only for assertion: verifies timestamps are strictly ascending within each series. */
     private final int timestampChannel;
     private final int totalChannels;
     private final DriverContext driverContext;
+    private final CircuitBreaker breaker;
 
     /** Element types per channel, lazily initialized from the first page. */
     private ElementType[] elementTypes;
@@ -70,12 +81,13 @@ public class TimeSeriesCollapseOperator implements Operator {
     private Object[] currentKey;
 
     /** Accumulated non-null collapse values per collapse-channel index. */
-    @SuppressWarnings("unchecked")
-    private List<Object>[] collapseValues;
+    private final List<Object>[] collapseValues;
 
     private final ArrayDeque<Page> outputQueue = new ArrayDeque<>();
     private boolean finished = false;
-    private boolean flushedFinal = false;
+
+    /** Heap bytes currently tracked via the circuit breaker for accumulated collapse values. */
+    private long trackedBytes;
 
     /** Last non-null timestamp seen for the current series; used to assert ascending order. */
     private long lastTimestamp = Long.MIN_VALUE;
@@ -93,6 +105,7 @@ public class TimeSeriesCollapseOperator implements Operator {
         this.timestampChannel = timestampChannel;
         this.totalChannels = keyChannels.length + collapseChannels.length;
         this.driverContext = driverContext;
+        this.breaker = driverContext.breaker();
         this.collapseValues = new List[collapseChannels.length];
         for (int c = 0; c < collapseChannels.length; c++) {
             collapseValues[c] = new ArrayList<>();
@@ -151,7 +164,9 @@ public class TimeSeriesCollapseOperator implements Operator {
                         : "timestamps must be strictly ascending within a tsid, got " + ts + " after " + lastTimestamp;
                     lastTimestamp = ts;
                     for (int c = 0; c < collapseChannels.length; c++) {
-                        collapseValues[c].add(BlockUtils.toJavaObject(page.getBlock(collapseChannels[c]), p));
+                        Object val = BlockUtils.toJavaObject(page.getBlock(collapseChannels[c]), p);
+                        trackValue(val);
+                        collapseValues[c].add(val);
                     }
                 }
             }
@@ -162,24 +177,22 @@ public class TimeSeriesCollapseOperator implements Operator {
 
     @Override
     public Page getOutput() {
-        if (finished && flushedFinal == false) {
-            flushedFinal = true;
-            if (currentKey != null) {
-                outputQueue.add(buildOutputPage());
-                currentKey = null;
-            }
-        }
         return outputQueue.poll();
     }
 
     @Override
     public void finish() {
         finished = true;
+        if (currentKey != null) {
+            outputQueue.add(buildOutputPage());
+            resetCollapseValues();
+            currentKey = null;
+        }
     }
 
     @Override
     public boolean isFinished() {
-        return finished && flushedFinal && outputQueue.isEmpty();
+        return finished && outputQueue.isEmpty();
     }
 
     @Override
@@ -188,6 +201,21 @@ public class TimeSeriesCollapseOperator implements Operator {
             p.releaseBlocks();
         }
         outputQueue.clear();
+        releaseTrackedBytes();
+    }
+
+    private void trackValue(Object value) {
+        long bytes = BYTES_PER_COLLAPSE_VALUE;
+        if (value instanceof BytesRef br) {
+            bytes += br.length;
+        }
+        breaker.addEstimateBytesAndMaybeBreak(bytes, "ts_collapse");
+        trackedBytes += bytes;
+    }
+
+    private void releaseTrackedBytes() {
+        breaker.addWithoutBreaking(-trackedBytes);
+        trackedBytes = 0;
     }
 
     private Object[] extractKey(Page page, int position) {
@@ -207,12 +235,20 @@ public class TimeSeriesCollapseOperator implements Operator {
         return true;
     }
 
-    @SuppressWarnings("unchecked")
     private void resetCollapseValues() {
-        collapseValues = new List[collapseChannels.length];
         for (int c = 0; c < collapseChannels.length; c++) {
-            collapseValues[c] = new ArrayList<>();
+            collapseValues[c].clear();
         }
+        releaseTrackedBytes();
+    }
+
+    @Override
+    public String toString() {
+        return "TimeSeriesCollapseOperator[keyChannels="
+            + Arrays.toString(keyChannels)
+            + ", collapseChannels="
+            + Arrays.toString(collapseChannels)
+            + "]";
     }
 
     private Page buildOutputPage() {
@@ -255,4 +291,5 @@ public class TimeSeriesCollapseOperator implements Operator {
             }
         }
     }
+
 }
