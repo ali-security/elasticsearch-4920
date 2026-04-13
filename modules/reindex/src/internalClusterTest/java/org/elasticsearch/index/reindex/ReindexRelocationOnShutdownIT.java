@@ -36,6 +36,7 @@ import org.elasticsearch.tasks.TaskResult;
 import org.elasticsearch.tasks.TaskResultsService;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.elasticsearch.test.NodeShutdownTestUtils;
+import org.elasticsearch.test.junit.annotations.TestLogging;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -188,15 +189,20 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
      * <ol>
      *     <li>
      *         {@link org.elasticsearch.action.search.SearchContextMissingNodesException} is thrown when the
-     *         reindexing task tries to search using a pit that could not relocate
+     *         reindexing task tries to search using a pit that could not relocate. In this case, the pit will have been closed
+     *         by node 1 shutting down, but reindexing has not realised this yet, and so is still attempting to call it.
      *     </li>
      *     <li>
-     *         Rarely, however, the error is {@link org.elasticsearch.action.search.SearchPhaseExecutionException} with
+     *         The reindexing task on node 2 is started before node 1 is fully shut down (which mimics production since shutdown can
+     *         take up to an hour). However, due to the set-up of the test, search shards required for the pit are
+     *         present on node 1. Therefore, if the reindexing task on node 2 is trying to access these shards on node 1 and
+     *         then node 1 shuts down, then we get a different error.
+     *         These errors are {@link org.elasticsearch.action.search.SearchPhaseExecutionException} with
      *         {@code node_not_connected_exception} if the query phase contacts the stopped node during the transport teardown.
      *     </li>
      * </ol>
      */
-    // TODO - Can we remove the other exception?
+    @TestLogging(reason = "improved visibility", value = "org.elasticsearch.cluster.service.MasterService:TRACE")
     public void testReindexFailsWhenPitRelocationFails() throws Exception {
         assumeTrue("reindex resilience must be enabled", ReindexPlugin.REINDEX_RESILIENCE_ENABLED);
         assumeTrue("reindex with point-in-time search must be enabled", ReindexPlugin.REINDEX_PIT_SEARCH_ENABLED);
@@ -513,7 +519,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
         assertAcked(
             indicesAdmin().prepareCreate(TaskResultsService.TASK_INDEX)
                 .setSettings(
-                    indexSettings(2, 0)
+                    indexSettings(2, 1)
                         // The only way to set this setting is to manually create the .tasks index ourselves
                         // This stops the code waiting 60 seconds after the node is shut down before allocating
                         .put(UnassignedInfo.INDEX_DELAYED_NODE_LEFT_TIMEOUT_SETTING.getKey(), TimeValue.ZERO)
@@ -531,8 +537,10 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
      *   </li>
      *   <li>
      *       {@code search_phase_execution_exception} whose {@code failed_shards} for {@code stoppedDataNodeId} wrap
-     *       {@code node_not_connected_exception}, which appear when a normal search phase still routes or sends work to the old
-     *       node while the connection is already gone.
+     *       {@code node_not_connected_exception} or {@code node_disconnected_exception} (from
+     *       {@link org.elasticsearch.transport.NodeNotConnectedException} or
+     *       {@link org.elasticsearch.transport.NodeDisconnectedException}), which appear when a normal search phase still routes or
+     *       sends work to the old node while the connection is already gone.
      *   </li>
      * </ul>
      */
@@ -548,7 +556,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
         }
         logger.warn(
             "relocated reindex task result did not match expected failure "
-                + "(search_context_missing_nodes_exception or search_phase_execution/node_not_connected for [{}]): "
+                + "(search_context_missing_nodes_exception or search_phase_execution with node_not_connected/node_disconnected for [{}]): "
                 + "completed=[{}] task=[{}] error=[{}] responseKeys=[{}]",
             stoppedDataNodeId,
             taskResult.isCompleted(),
@@ -583,7 +591,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
 
     /**
      * {@link org.elasticsearch.action.search.SearchPhaseExecutionException} with a shard failure on the stopped node
-     * due to {@link org.elasticsearch.transport.NodeNotConnectedException}.
+     * due to {@link org.elasticsearch.transport.NodeNotConnectedException} or {@link org.elasticsearch.transport.NodeDisconnectedException}.
      */
     private static boolean matchesSearchPhaseNodeDisconnectedFromStoppedNode(final TaskResult taskResult, final String stoppedDataNodeId) {
         if (taskResult.getError() == null) {
@@ -598,7 +606,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
             for (Object fs : failedShards) {
                 if (fs instanceof Map<?, ?> shardFailure) {
                     if (stoppedDataNodeId.equals(shardFailure.get("node"))
-                        && reasonMapIndicatesNodeNotConnected(shardFailure.get("reason"))) {
+                        && reasonMapIndicatesNodeTransportDisconnect(shardFailure.get("reason"))) {
                         return true;
                     }
                 }
@@ -607,17 +615,25 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
         return false;
     }
 
-    private static boolean reasonMapIndicatesNodeNotConnected(final Object reasonObj) {
+    /**
+     * True if the serialized failure is a transport disconnect to the target node: either {@code node_not_connected_exception}
+     * or {@code node_disconnected_exception} (including under {@code caused_by}).
+     */
+    private static boolean reasonMapIndicatesNodeTransportDisconnect(final Object reasonObj) {
         if (reasonObj instanceof Map<?, ?> reason) {
-            if ("node_not_connected_exception".equals(reason.get("type"))) {
+            if (isNodeTransportDisconnectExceptionType(reason.get("type"))) {
                 return true;
             }
             final Object causedBy = reason.get("caused_by");
-            if (causedBy instanceof Map<?, ?> cb && "node_not_connected_exception".equals(cb.get("type"))) {
+            if (causedBy instanceof Map<?, ?> cb && isNodeTransportDisconnectExceptionType(cb.get("type"))) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isNodeTransportDisconnectExceptionType(final Object type) {
+        return "node_not_connected_exception".equals(type) || "node_disconnected_exception".equals(type);
     }
 
     /**
