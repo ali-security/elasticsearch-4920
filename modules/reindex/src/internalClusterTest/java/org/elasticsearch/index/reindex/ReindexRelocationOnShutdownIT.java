@@ -302,8 +302,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
             .orElseThrow();
         assertNull(success.get());
 
-        // Assert on the relocated task: failure may be SearchContextMissingNodes (PIT path) or SearchPhaseExecutionException
-        // with node_not_connected_exception (query still routed to the stopped node during transport teardown).
+        // Assert on the relocated task
         assertBusy(() -> {
             final GetTaskResponse relocatedTaskFinished = clusterAdmin().prepareGetTask(new TaskId(relocatedTaskIdString))
                 .setWaitForCompletion(false)
