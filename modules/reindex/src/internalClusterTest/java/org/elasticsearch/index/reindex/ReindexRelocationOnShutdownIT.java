@@ -48,7 +48,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.elasticsearch.cluster.metadata.IndexMetadata.INDEX_ROUTING_REQUIRE_GROUP_SETTING;
 import static org.elasticsearch.node.ShutdownPrepareService.MAXIMUM_REINDEXING_TIMEOUT_SETTING;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHitCount;
@@ -590,7 +589,8 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
 
     /**
      * {@link org.elasticsearch.action.search.SearchPhaseExecutionException} with a shard failure on the stopped node
-     * due to {@link org.elasticsearch.transport.NodeNotConnectedException} or {@link org.elasticsearch.transport.NodeDisconnectedException}.
+     * due to {@link org.elasticsearch.transport.NodeNotConnectedException} or
+     * {@link org.elasticsearch.transport.NodeDisconnectedException}.
      */
     private static boolean matchesSearchPhaseNodeDisconnectedFromStoppedNode(final TaskResult taskResult, final String stoppedDataNodeId) {
         if (taskResult.getError() == null) {
