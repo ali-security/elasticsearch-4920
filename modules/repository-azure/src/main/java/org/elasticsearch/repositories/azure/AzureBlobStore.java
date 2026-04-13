@@ -749,6 +749,13 @@ public class AzureBlobStore implements BlobStore {
         }
         final BlobServiceClient syncClient = client(purpose);
         final BlobClient blobSyncClient = syncClient.getBlobContainerClient(container).getBlobClient(blobName);
+        logger.info(
+            "Azure copyBlob [{}] to [{}] hasSas={}, sourceExists={}",
+            sourceBlobName,
+            blobName,
+            Strings.hasText(sasToken),
+            sourceBlobSyncClient.exists()
+        );
         try {
             PollResponse<BlobCopyInfo> response = blobSyncClient.beginCopy(sourceUrl, Duration.ofMillis(copyPollInterval.millis()))
                 .waitForCompletion();
