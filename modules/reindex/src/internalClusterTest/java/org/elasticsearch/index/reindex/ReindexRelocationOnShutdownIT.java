@@ -218,7 +218,7 @@ public class ReindexRelocationOnShutdownIT extends ESIntegTestCase {
         ensureStableCluster(3);
 
         // Manually create the .tasks index with appropriate settings
-        createTasksIndex();
+//        createTasksIndex();
 
         prepareCreate(SOURCE).setSettings(
             Settings.builder()
